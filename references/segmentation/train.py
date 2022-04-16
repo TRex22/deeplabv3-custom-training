@@ -81,7 +81,7 @@ def train_one_epoch(model, criterion, optimizer, data_loader, lr_scheduler, devi
     header = f"Epoch: [{epoch}]"
     for image, target in metric_logger.log_every(data_loader, print_freq, header):
         image, target = image.to(device), target.to(device)
-        with torch.cuda.amp.autocast(enabled=scaler is not None):
+        with torch.cuda.amp.autocast(enabled=True):
             output = model(image)
             loss = criterion(output, target)
 
@@ -132,7 +132,8 @@ def main(args):
     )
 
     model = torchvision.models.segmentation.__dict__[args.model](
-        weights=args.weights, weights_backbone=args.weights_backbone, num_classes=num_classes, aux_loss=args.aux_loss
+        # weights=args.weights, weights_backbone=args.weights_backbone, num_classes=num_classes, aux_loss=args.aux_loss
+        num_classes=num_classes, aux_loss=args.aux_loss
     )
     model.to(device)
     if args.distributed:
@@ -277,4 +278,3 @@ def get_args_parser(add_help=True):
 if __name__ == "__main__":
     args = get_args_parser().parse_args()
     main(args)
-

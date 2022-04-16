@@ -92,6 +92,12 @@ def get_coco(root, image_set, transforms):
         "val": ("val2017", os.path.join("annotations", "instances_val2017.json")),
         # "train": ("val2017", os.path.join("annotations", "instances_val2017.json"))
     }
+
+    # [   '__background__', 'aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus',
+        # 'car', 'cat', 'chair', 'cow', 'diningtable', 'dog', 'horse', 'motorbike',
+        # 'person', 'pottedplant', 'sheep', 'sofa', 'train', 'tvmonitor']
+    # CAT_LIST = [0, 5, 2, 16, 9, 44, 6, 3, 17, 62, 21, 67, 18, 19, 4, 1, 64, 20, 63, 7, 72]
+
     CAT_LIST = [0, 5, 2, 16, 9, 44, 6, 3, 17, 62, 21, 67, 18, 19, 4, 1, 64, 20, 63, 7, 72]
 
     transforms = Compose([FilterAndRemapCocoCategories(CAT_LIST, remap=True), ConvertCocoPolysToMask(), transforms])
@@ -106,4 +112,3 @@ def get_coco(root, image_set, transforms):
         dataset = _coco_remove_images_without_annotations(dataset, CAT_LIST)
 
     return dataset
-

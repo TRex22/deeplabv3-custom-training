@@ -50,6 +50,8 @@ CAT_LIST = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 2
 21: cow
 
 ## Train Command
+`torchrun train.py -h`
+
 ### Resnet50
 torchrun train.py --data-path /mnt/excelsior/data/coco/data_raw/ --device cuda --lr 0.02 --dataset coco -b 12 -j 12 --epochs 30 --model deeplabv3_resnet50 --aux-loss --weights-backbone ResNet101_Weights.IMAGENET1K_V1 --output-dir /data/models/vision/
 
@@ -59,3 +61,10 @@ torchrun train.py --data-path /mnt/scratch_disk/data/coco/data_raw/ --device cud
 torchrun train.py --data-path /mnt/excelsior/data/coco/data_raw/ --device cuda --lr 0.02 --dataset coco -b 6 -j 12 --epochs 30 --model deeplabv3_resnet101 --aux-loss --weights-backbone ResNet101_Weights.IMAGENET1K_V1 --output-dir /data/models/vision/
 
 torchrun train.py --data-path /mnt/scratch_disk/data/coco/data_raw/ --device cuda --lr 0.02 --dataset coco -b 6 -j 12 --epochs 30 --model deeplabv3_resnet101 --aux-loss --weights-backbone ResNet101_Weights.IMAGENET1K_V1 --output-dir /data/models/vision/
+
+## Resume
+### Resnet50
+torchrun train.py --data-path /mnt/scratch_disk/data/coco/data_raw/ --device cuda --lr 0.02 --dataset coco -b 12 -j 12 --epochs 30 --model deeplabv3_resnet50 --aux-loss --weights-backbone ResNet101_Weights.IMAGENET1K_V1 --output-dir /data/models/vision/ --start-epoch 5 --resume /mnt/excelsior/models/vision/checkpoint.pth
+
+### Resnet101
+torchrun train.py --data-path /mnt/scratch_disk/data/coco/data_raw/ --device cuda --lr 0.02 --dataset coco -b 6 -j 12 --epochs 30 --model deeplabv3_resnet101 --aux-loss --weights-backbone ResNet101_Weights.IMAGENET1K_V1 --output-dir /data/models/vision/ --start-epoch 5 --resume /mnt/excelsior/models/vision/checkpoint.pth

@@ -3,15 +3,15 @@ This repo exists to train the pyTorch Torchvision deeplabv3 models with custom l
 I could not find a good set of trained models online so I decided to train my own
 
 # TODO
-[] Re-train on COCO (~580 epochs) with custom labels
-[] Train on CityScapes
-[] Make clearer notes
-[] Upload models
-[] Make reference to mixed precision
-[] Make notes for cluster compute
-[] Attempt multi-node if required
-[] Add in evaluation code based on reference but using multiple models
-[] Add in links to reference code
+- [] Re-train on COCO (~580 epochs) with custom labels
+- [] Train on CityScapes
+- [] Make clearer notes
+- [] Upload models
+- [] Make reference to mixed precision
+- [] Make notes for cluster compute
+- [] Attempt multi-node if required
+- [] Add in evaluation code based on reference but using multiple models
+- [] Add in links to reference code
 
 # Notes
 Modify the hardcoded labels in the coco_utils and then train them: https://github.com/pytorch/vision/blob/main/references/segmentation/coco_utils.py

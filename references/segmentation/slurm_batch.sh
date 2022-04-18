@@ -10,4 +10,4 @@
 # torchrun train.py --data-path /home-mscluster/jchalom/data/coco/zips --device cuda --lr 0.02 --dataset coco -b 24 -j 28 --epochs 30 --model deeplabv3_resnet101 --aux-loss --weights-backbone ResNet101_Weights.IMAGENET1K_V1 --output-dir /home-mscluster/jchalom/trained_models/deeplabv3
 
 # Continue - set as needed
-torchrun train.py --data-path /home-mscluster/jchalom/data/coco/zips --device cuda --lr 0.02 --dataset coco -b 24 -j 28 --epochs 30 --model deeplabv3_resnet101 --aux-loss --weights-backbone ResNet101_Weights.IMAGENET1K_V1 --output-dir /home-mscluster/jchalom/trained_models/deeplabv3 --start-epoch 12 --resume /home-mscluster/jchalom/trained_models/deeplabv3/checkpoint.pth
+torchrun train.py --data-path /home-mscluster/jchalom/data/coco/zips --device cuda --lr 0.02 --dataset coco -b 24 -j 28 --epochs 30 --model deeplabv3_resnet101 --aux-loss --weights-backbone ResNet101_Weights.IMAGENET1K_V1 --output-dir /home-mscluster/jchalom/trained_models/deeplabv3 --start-epoch 4 --resume /home-mscluster/jchalom/trained_models/deeplabv3/checkpoint.pth

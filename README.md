@@ -12,6 +12,10 @@ I could not find a good set of trained models online so I decided to train my ow
 - [] Attempt multi-node if required
 - [] Add in evaluation code based on reference but using multiple models
 - [] Add in links to reference code
+- [] Add in required dependencies and an environment
+
+# Thanks
+Computations were performed using High Performance Computing infrastructure provided by the Mathematical Sciences Support unit at the University of the Witwatersrand.
 
 # Notes
 Modify the hardcoded labels in the coco_utils and then train them: https://github.com/pytorch/vision/blob/main/references/segmentation/coco_utils.py

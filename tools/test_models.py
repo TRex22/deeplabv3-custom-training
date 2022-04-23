@@ -1,4 +1,5 @@
 # https://stackoverflow.com/questions/63892031/how-to-train-deeplabv3-on-custom-dataset-on-pytorch
+import time
 import numpy as np
 
 import torch
@@ -73,8 +74,6 @@ model_stats = summary(model, device=summary_dev)
 # Model evaluate
 model = model.eval()
 
-# Super inefficient to do this in-memory but will use less HDD
-# Since we only run one epoch/run
 def process_image(image, device, size=()):
   preprocess = transforms.Compose([
     # transforms.Resize(size),
@@ -88,12 +87,39 @@ def process_image(image, device, size=()):
 
   return image_batch.to(device)
 
+# Based on: https://towardsdatascience.com/intersection-over-union-iou-calculation-for-evaluating-an-image-segmentation-model-8b22e2e84686
+def compute_iou(output, target):
+  intersection = torch.logical_and(output, target)
+  union = torch.logical_or(output, target)
+  iou_score = torch.sum(intersection) / torch.sum(union)
+  # print(f'IoU is {iou_score}')
+
+  return iou_score
+
 # Run test on COCO
+# Super inefficient to do this in-memory but will use less HDD
+# Since we only run one epoch/run
+sum_of_iou = 0.0
+sum_of_data_load_time = 0.0
+
 with torch.no_grad():
   for image, target in tqdm.tqdm(val_dataset):
+    start_data_time = time.time()
     image_batch = image.unsqueeze(0).to(dev) #process_image(image, dev)
 
+    data_load_time = time.time() - start_data_time
+    sum_of_data_load_time += data_load_time
+
+    # Make prediction
     output = model(image_batch)
-    # output = output["out"]
-    breakpoint()
-    # target = torch.Tensor(np.array(target)).to(dev) # process_image(target, dev)
+    output = output["out"]
+
+    iou_score = compute_iou(output, target.to(dev))
+    sum_of_iou += sum_of_iou
+
+average_iou = sum_of_iou / len(val_dataset)
+average_data_load_time = sum_of_data_load_time / len(val_dataset)
+
+print(f'Average IOU: {average_iou}')
+print(f'Total Data Load Time: {sum_of_data_load_time}')
+print(f'Average Data Load Time: {average_data_load_time}')

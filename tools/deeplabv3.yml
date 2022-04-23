@@ -8,10 +8,11 @@ dependencies:
   - blas=1.0=mkl
   - brotlipy=0.7.0=py39h27cfd23_1003
   - bzip2=1.0.8=h7b6447c_0
-  - ca-certificates=2022.3.29=h06a4308_0
+  - ca-certificates=2022.3.29=h06a4308_1
   - certifi=2021.10.8=py39h06a4308_2
   - cffi=1.15.0=py39hd667e15_1
   - charset-normalizer=2.0.4=pyhd3eb1b0_0
+  - colorama=0.4.4=pyhd3eb1b0_0
   - cryptography=36.0.0=py39h9ce1e76_0
   - cudatoolkit=11.3.1=h2bc3f7f_2
   - ffmpeg=4.3=hf484d3e_0
@@ -65,6 +66,7 @@ dependencies:
   - tk=8.6.11=h1ccaba5_0
   - torchaudio=0.11.0=py39_cu113
   - torchvision=0.12.0=py39_cu113
+  - tqdm=4.63.0=pyhd3eb1b0_0
   - typing_extensions=4.1.1=pyh06a4308_0
   - tzdata=2022a=hda174b7_0
   - urllib3=1.26.8=pyhd3eb1b0_0

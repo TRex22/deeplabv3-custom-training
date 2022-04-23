@@ -115,11 +115,13 @@ with torch.no_grad():
     output = output["out"]
 
     iou_score = compute_iou(output, target.to(dev))
-    sum_of_iou += sum_of_iou
+    sum_of_iou += iou_score.cpu()
 
 average_iou = sum_of_iou / len(val_dataset)
 average_data_load_time = sum_of_data_load_time / len(val_dataset)
 
+print(f'Total IoU: {sum_of_iou}')
 print(f'Average IOU: {average_iou}')
+
 print(f'Total Data Load Time: {sum_of_data_load_time}')
 print(f'Average Data Load Time: {average_data_load_time}')

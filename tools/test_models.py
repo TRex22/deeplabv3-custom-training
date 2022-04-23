@@ -19,8 +19,9 @@ sys.path.insert(1, '../references/segmentation/')
 import presets
 from coco_utils import get_coco
 
-selected_model = 'deeplabv3_resnet50'
-# selected_model = 'deeplabv3_resnet101'
+# TODO: Add in a configuration
+# selected_model = 'deeplabv3_resnet50'
+selected_model = 'deeplabv3_resnet101'
 print(selected_model)
 
 def load_coco():
@@ -35,7 +36,7 @@ def load_coco():
   # val_dataloader = DataLoader(val_dataset, batch_size=1, shuffle=False, num_workers=2, drop_last=False, persistent_workers=False)
 
   # Use reference
-  root = '/data/data/coco/data_raw/'
+  root = '/mnt/scratch_disk/data/coco/data_raw/'
   image_set = "val"
   transforms = presets.SegmentationPresetEval(base_size=520)
 
@@ -55,13 +56,15 @@ if torch.cuda.is_available():
   summary_dev = 'cuda'
 
 # Load model
-model = models.segmentation.deeplabv3_resnet50(pretrained=False, num_classes=21)
-# model = models.segmentation.deeplabv3_resnet101(pretrained=True, num_classes=21)
+# model = models.segmentation.deeplabv3_resnet50(pretrained=False, num_classes=21)
+model = models.segmentation.deeplabv3_resnet101(pretrained=False, num_classes=21)
 
 # Load model weights
 # Training crashed when lr dropped to complex numbers
-model_path = '/mnt/excelsior/trained_models/deeplabv3_resnet50/model_2.pth'
+# model_path = '/mnt/excelsior/trained_models/deeplabv3_resnet50/model_2.pth'
 # model_path = '/mnt/excelsior/trained_models/deeplabv3_resnet50/model_25.pth' # NaN output ;()
+
+model_path = '/mnt/excelsior/trained_models/deeplabv3_resnet101/model_2.pth'
 # model_path = '/mnt/excelsior/trained_models/deeplabv3_resnet101/model_18.pth'
 
 print(f'Loading model from: {model_path}')

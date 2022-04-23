@@ -132,8 +132,8 @@ def main(args):
     )
 
     model = torchvision.models.segmentation.__dict__[args.model](
-        # weights=args.weights, weights_backbone=args.weights_backbone, num_classes=num_classes, aux_loss=args.aux_loss
-        num_classes=num_classes, aux_loss=args.aux_loss
+        weights=args.weights, weights_backbone=args.weights_backbone, num_classes=num_classes, aux_loss=args.aux_loss
+        # num_classes=num_classes, aux_loss=args.aux_loss
     )
     model.to(device)
     if args.distributed:

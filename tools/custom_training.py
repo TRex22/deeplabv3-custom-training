@@ -125,31 +125,30 @@ def loss_batch(model, scaler, loss_func, xb, yb, opt=None):
 
   return loss.item(), len(xb), [prediction.flatten(), yb]
 
-def train(model, train_dataset, loss_func, batch_size, epoch, sample_percentage):
+def train(model, train_dataloader, loss_func, batch_size, epoch):
   model = model.train()
   scaler = torch.cuda.amp.GradScaler(enabled=True)
 
   with torch.cuda.amp.autocast(enabled=True, cache_enabled=True): # TODO: cache_enabled
-    # TODO: sample_percentage
     loss, nums, prediction_pairs = zip(
-      *[loss_batch(model, scaler, loss_func, xb, yb) for xb, yb in tqdm.tqdm(train_dataset)]
+      *[loss_batch(model, scaler, loss_func, xb, yb) for xb, yb in tqdm.tqdm(train_dataloader)]
     )
 
   print(f'Epoch {epoch} train loss: {loss}')
   return model
 
 # TODO: Save results
-def validate(model, val_dataset, loss_func, batch_size, epoch):
+def validate(model, val_dataloader, loss_func, batch_size, epoch):
   model = model.eval()
   scaler = torch.cuda.amp.GradScaler(enabled=True)
 
   with torch.no_grad():
     loss, nums, prediction_pairs = zip(
-      *[loss_batch(model, scaler, loss_func, xb, yb) for xb, yb in tqdm.tqdm(val_dataset)]
+      *[loss_batch(model, scaler, loss_func, xb, yb) for xb, yb in tqdm.tqdm(val_dataloader)]
     )
 
   print(f'Epoch {epoch} val loss: {loss}')
-  average_iou = test_IOU(model, val_dataset)
+  average_iou = test_IOU(model, val_dataloader)
 
 def process_image(image, device, size=()):
   preprocess = transforms.Compose([
@@ -208,7 +207,12 @@ def test_IOU(model, dataset):
   return average_iou
 
 train_dataset = load_coco('/mnt/scratch_disk/data/coco/data_raw/', 'train')
+subset_idex = list(range(int(len(train_dataset) * sample_percentage)))
+train_subset = torch.utils.data.Subset(train_dataset, subset_idex)
+train_dataloader = DataLoader(train_subset, batch_size=batch_size, shuffle=True, drop_last=True)
+
 val_dataset = load_coco('/mnt/scratch_disk/data/coco/data_raw/', 'val')
+val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
 
 model = initialise_model(selected_model)
 
@@ -218,8 +222,8 @@ else: # Train model to be better
   print("Train model ...")
   loss_func = nn.functional.cross_entropy
   for epoch in tqdm.tqdm(range(epochs)):
-    model = train(model, train_dataset, loss_func, batch_size, epoch, sample_percentage)
-    validate(model, val_dataset, loss_func, batch_size, epoch)
+    model = train(model, train_dataloader, loss_func, batch_size, epoch)
+    validate(model, val_dataloader, loss_func, batch_size, epoch)
 
 # Run test on COCO
 print('Final IOU ...')

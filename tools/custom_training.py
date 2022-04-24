@@ -3,6 +3,7 @@ import time
 import numpy as np
 
 import torch
+from torch import nn
 import torchvision
 from torch.utils.data import DataLoader
 
@@ -19,9 +20,21 @@ sys.path.insert(1, '../references/segmentation/')
 import presets
 from coco_utils import get_coco
 
+print('Custom train deeplabv3 ...')
+
+# TODO: Add in custom configuration / args
 # selected_model = 'deeplabv3_resnet50'
 selected_model = 'deeplabv3_resnet101'
-print(selected_model)
+print(f'Selected Model: {selected_model}')
+
+batch_size = 48
+print(f'Batch Size: {batch_size}')
+
+epochs = 1
+print(f'Epochs: {epochs}')
+
+sample_percentage = 0.1 # 1.0
+print(f'Data sample percent: {sample_percentage}')
 
 load_model = False
 
@@ -53,17 +66,27 @@ if torch.cuda.is_available():
 # val_dataset = torchvision.datasets.CocoDetection(val_image_path, val_annotation_path)
 # val_dataloader = DataLoader(val_dataset, batch_size=1, shuffle=False, num_workers=2, drop_last=False, persistent_workers=False)
 def load_coco(root, image_set):
-  # Use reference
+  # Using reference code
+  # See Readme.md for new category list
+  category_list = [0, 5, 2, 16, 9, 44, 6, 3, 17, 62, 21, 67, 18, 19, 4, 1, 64, 20, 63, 7, 72]
   transforms = presets.SegmentationPresetEval(base_size=520)
   return get_coco(root, image_set, transforms)
 
+def xavier_uniform_init(layer):
+  if type(layer) == nn.Linear or type(layer) == nn.Conv2d:
+    nn.init.xavier_uniform_(layer.weight)
+
 def initialise_model(selected_model, pretrained=False, num_classes=21):
   if selected_model == 'deeplabv3_resnet101':
-    return models.segmentation.deeplabv3_resnet101(pretrained=pretrained, num_classes=num_classes)
+    model = models.segmentation.deeplabv3_resnet101(pretrained=pretrained, num_classes=num_classes)
   elif selected_model == 'deeplabv3_resnet50':
-    return models.segmentation.deeplabv3_resnet50(pretrained=pretrained, num_classes=num_classes)
+    model = models.segmentation.deeplabv3_resnet50(pretrained=pretrained, num_classes=num_classes)
   else:
     raise RuntimeError("Invalid model selected.")
+
+  # Randomise weights
+  model.apply(xavier_uniform_init)
+  return model
 
 # https://pytorch.org/docs/stable/generated/torch.nn.Threshold.html
 def load(model, path):
@@ -80,10 +103,53 @@ def load(model, path):
 
   return model
 
-def
+def loss_batch(model, scaler, loss_func, xb, yb, opt=None):
+  prediction = model(xb)
+  loss = loss_func(prediction.flatten(), yb) # TODO: Automate for two outputs
 
-# def train(model, train_dataset):
+  if opt is not None:
+    scaler.scale(loss).backward()
 
+    # clip_grad_norm
+    # Unscales the gradients of optimizer's assigned params in-place
+    scaler.unscale_(opt)
+
+    # Since the gradients of optimizer's assigned params are now unscaled, clips as usual.
+    # You may use the same value for max_norm here as you would without gradient scaling.
+    torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=True)
+
+    # Step
+    scaler.step(opt)
+    scaler.update()
+    opt.zero_grad(set_to_none=True) # set_to_none=True here can modestly improve performance
+
+  return loss.item(), len(xb), [prediction.flatten(), yb]
+
+def train(model, train_dataset, loss_func, batch_size, epoch, sample_percentage):
+  model = model.train()
+  scaler = torch.cuda.amp.GradScaler(enabled=True)
+
+  with torch.cuda.amp.autocast(enabled=True, cache_enabled=True): # TODO: cache_enabled
+    # TODO: sample_percentage
+    loss, nums, prediction_pairs = zip(
+      *[loss_batch(model, scaler, loss_func, xb, yb) for xb, yb in tqdm.tqdm(train_dataset)]
+    )
+
+  print(f'Epoch {epoch} train loss: {loss}')
+  return model
+
+# TODO: Save results
+def validate(model, val_dataset, loss_func, batch_size, epoch):
+  model = model.eval()
+  scaler = torch.cuda.amp.GradScaler(enabled=True)
+
+  with torch.no_grad():
+    loss, nums, prediction_pairs = zip(
+      *[loss_batch(model, scaler, loss_func, xb, yb) for xb, yb in tqdm.tqdm(val_dataset)]
+    )
+
+  print(f'Epoch {epoch} val loss: {loss}')
+  average_iou = test_IOU(model, val_dataset)
 
 def process_image(image, device, size=()):
   preprocess = transforms.Compose([
@@ -107,7 +173,7 @@ def compute_iou(output, target):
 
   return iou_score
 
-def test_IOU(model, dataset)
+def test_IOU(model, dataset):
   model = model.eval()
 
   # Super inefficient to do this in-memory but will use less HDD
@@ -133,11 +199,13 @@ def test_IOU(model, dataset)
   average_iou = sum_of_iou / len(dataset)
   average_data_load_time = sum_of_data_load_time / len(dataset)
 
-  print(f'Total IoU: {sum_of_iou}')
+  # print(f'Total IoU: {sum_of_iou}')
   print(f'Average IOU: {average_iou}')
 
-  print(f'Total Data Load Time: {sum_of_data_load_time}')
-  print(f'Average Data Load Time: {average_data_load_time}')
+  # print(f'Total Data Load Time: {sum_of_data_load_time}')
+  # print(f'Average Data Load Time: {average_data_load_time}')
+
+  return average_iou
 
 train_dataset = load_coco('/mnt/scratch_disk/data/coco/data_raw/', 'train')
 val_dataset = load_coco('/mnt/scratch_disk/data/coco/data_raw/', 'val')
@@ -147,7 +215,12 @@ model = initialise_model(selected_model)
 if load_model:
   model = load(model, model_path) # Load model
 else: # Train model to be better
-  model = train(model, train_dataset)
+  print("Train model ...")
+  loss_func = nn.functional.cross_entropy
+  for epoch in tqdm.tqdm(range(epochs)):
+    model = train(model, train_dataset, loss_func, batch_size, epoch, sample_percentage)
+    validate(model, val_dataset, loss_func, batch_size, epoch)
 
 # Run test on COCO
+print('Final IOU ...')
 test_IOU(model, val_dataset)

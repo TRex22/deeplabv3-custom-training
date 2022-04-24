@@ -3,6 +3,7 @@ import time
 import numpy as np
 
 import torch
+from torch import optim
 from torch import nn
 import torchvision
 from torch.utils.data import DataLoader
@@ -32,11 +33,18 @@ print(f'Selected Model: {selected_model}')
 batch_size = 16
 print(f'Batch Size: {batch_size}')
 
-epochs = 1
+epochs = 3
 print(f'Epochs: {epochs}')
 
-sample_percentage = 0.01 # 0.1 # 1.0
+sample_percentage = 0.25 # 0.1 # 1.0
 print(f'Data sample percent: {sample_percentage}')
+
+lr = 0.02
+momentum = 0.8
+betas = (0.9, 0.999)
+epsilon = 1e-08
+weight_decay = 0
+amsgrad = False
 
 load_model = False
 
@@ -110,7 +118,7 @@ def load(model, path):
 
   return model
 
-def loss_batch(model, device, scaler, loss_func, xb, yb):
+def loss_batch(model, device, scaler, loss_func, opt, xb, yb):
   input = xb.to(device)
   prediction = model(input)
 
@@ -130,9 +138,24 @@ def loss_batch(model, device, scaler, loss_func, xb, yb):
   del output
   del target
 
+  if opt is not None:
+    scaler.scale(loss).backward()
+
+    # clip_grad_norm
+    # Unscales the gradients of optimizer's assigned params in-place
+    scaler.unscale_(opt)
+
+    # Since the gradients of optimizer's assigned params are now unscaled, clips as usual.
+    # You may use the same value for max_norm here as you would without gradient scaling.
+    torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=0.1)
+
+    scaler.step(opt)
+    scaler.update()
+    opt.zero_grad(set_to_none=True) # set_to_none=True here can modestly improve performance
+
   return [loss.cpu().item(), iou_score]
 
-def train(model, dev, train_dataloader, loss_func, epoch):
+def train(model, dev, train_dataloader, loss_func, opt, epoch):
   model = model.train()
   scaler = torch.cuda.amp.GradScaler(enabled=True)
 
@@ -143,7 +166,7 @@ def train(model, dev, train_dataloader, loss_func, epoch):
     pbar = tqdm.tqdm(total=len(train_dataloader))
 
     for xb, yb in train_dataloader:
-      loss, iou_score = loss_batch(model, dev, scaler, loss_func, xb, yb)
+      loss, iou_score = loss_batch(model, dev, scaler, loss_func, opt, xb, yb)
 
       sum_of_loss += loss
       sum_of_iou += iou_score
@@ -159,7 +182,7 @@ def train(model, dev, train_dataloader, loss_func, epoch):
 # TODO: Save results
 # TODO: Early stopping
 # TODO: Dynamic lr
-def validate(model, dev, val_dataloader, loss_func, epoch):
+def validate(model, dev, val_dataloader, loss_func, opt, epoch):
   model = model.eval()
   scaler = torch.cuda.amp.GradScaler(enabled=True)
 
@@ -170,7 +193,7 @@ def validate(model, dev, val_dataloader, loss_func, epoch):
 
   with torch.no_grad():
     for xb, yb in val_dataloader:
-      loss, iou_score = loss_batch(model, dev, scaler, loss_func, xb, yb)
+      loss, iou_score = loss_batch(model, dev, scaler, loss_func, opt, xb, yb)
 
       sum_of_loss += loss
       sum_of_iou += iou_score
@@ -255,6 +278,9 @@ else: # Train model to be better
   print("Train model ...")
 
   loss_func = nn.functional.cross_entropy
+  opt = optim.SGD(model.parameters(), lr=lr, momentum=momentum)
+  # opt = torch.optim.Adam(model.parameters(), lr=lr, betas=betas, eps=epsilon, weight_decay=weight_decay, amsgrad=amsgrad)
+
   for epoch in tqdm.tqdm(range(epochs)):
-    model = train(model, dev, train_dataloader, loss_func, epoch)
-    validate(model, dev, val_dataloader, loss_func, epoch)
+    model = train(model, dev, train_dataloader, loss_func, opt, epoch)
+    validate(model, dev, val_dataloader, loss_func, opt, epoch)

@@ -240,9 +240,6 @@ def train(model, device, loss_func, opt, epoch, outer_batch_size):
 
   return [model, opt]
 
-# TODO: Save results
-# TODO: Early stopping
-# TODO: Dynamic lr
 def validate(model, device, loss_func, epoch, outer_batch_size):
   # Load Data - in val step to save memory
   val_dataset = load_coco(config['coco_path'], 'val')
@@ -262,19 +259,6 @@ def validate(model, device, loss_func, epoch, outer_batch_size):
   del val_dataloader
   del val_dataset
 
-def process_image(image, device, size=()):
-  preprocess = transforms.Compose([
-    # transforms.Resize(size),
-    transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-  ])
-
-  # image = image.convert('RGB')
-  image_batch = preprocess(image).unsqueeze(0)
-  # image.close()
-
-  return image_batch.to(device)
-
 # Based on: https://towardsdatascience.com/intersection-over-union-iou-calculation-for-evaluating-an-image-segmentation-model-8b22e2e84686
 def compute_iou(output, target):
   intersection = torch.logical_and(output, target)
@@ -283,40 +267,6 @@ def compute_iou(output, target):
   # print(f'IoU is {iou_score}')
 
   return iou_score
-
-def test_IOU(model, dataset):
-  model = model.eval()
-
-  # Super inefficient to do this in-memory but will use less HDD
-  # Since we only run one epoch/run
-  sum_of_iou = 0.0
-  sum_of_data_load_time = 0.0
-
-  with torch.no_grad():
-    for image, target in tqdm.tqdm(dataset):
-      start_data_time = time.time()
-      image_batch = image.unsqueeze(0).to(dev) #process_image(image, dev)
-
-      data_load_time = time.time() - start_data_time
-      sum_of_data_load_time += data_load_time
-
-      # Make prediction
-      output = model(image_batch)
-      output = output["out"]
-
-      iou_score = compute_iou(output, target.to(dev))
-      sum_of_iou += iou_score.cpu()
-
-  average_iou = sum_of_iou / len(dataset)
-  average_data_load_time = sum_of_data_load_time / len(dataset)
-
-  # print(f'Total IoU: {sum_of_iou}')
-  print(f'Average IOU: {average_iou}')
-
-  # print(f'Total Data Load Time: {sum_of_data_load_time}')
-  # print(f'Average Data Load Time: {average_data_load_time}')
-
-  return average_iou
 
 ################################################################################
 # Main Thread                                                                  #

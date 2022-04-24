@@ -34,7 +34,7 @@ print(f'Batch Size: {batch_size}')
 epochs = 1
 print(f'Epochs: {epochs}')
 
-sample_percentage = 0.05 # 0.1 # 1.0
+sample_percentage = 0.1 # 0.1 # 1.0
 print(f'Data sample percent: {sample_percentage}')
 
 load_model = False
@@ -226,7 +226,7 @@ def test_IOU(model, dataset):
 train_dataset = load_coco('/mnt/scratch_disk/data/coco/data_raw/', 'train')
 subset_idex = list(range(int(len(train_dataset) * sample_percentage))) # TODO: Unload others
 train_subset = torch.utils.data.Subset(train_dataset, subset_idex)
-train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True, collate_fn=utils.collate_fn)
+train_dataloader = DataLoader(train_subset, batch_size=batch_size, shuffle=True, drop_last=True, collate_fn=utils.collate_fn)
 
 # TODO: Load separately
 val_dataset = load_coco('/mnt/scratch_disk/data/coco/data_raw/', 'val')

@@ -18,6 +18,7 @@ sys.path.insert(1, '../references/segmentation/')
 
 # Reference Code
 import presets
+import utils
 from coco_utils import get_coco
 
 print('Custom train deeplabv3 ...')
@@ -76,7 +77,7 @@ def xavier_uniform_init(layer):
   if type(layer) == nn.Linear or type(layer) == nn.Conv2d:
     nn.init.xavier_uniform_(layer.weight)
 
-def initialise_model(selected_model, pretrained=False, num_classes=21):
+def initialise_model(selected_model, dev, pretrained=False, num_classes=21):
   if selected_model == 'deeplabv3_resnet101':
     model = models.segmentation.deeplabv3_resnet101(pretrained=pretrained, num_classes=num_classes)
   elif selected_model == 'deeplabv3_resnet50':
@@ -86,7 +87,7 @@ def initialise_model(selected_model, pretrained=False, num_classes=21):
 
   # Randomise weights
   model.apply(xavier_uniform_init)
-  return model
+  return model.to(dev)
 
 # https://pytorch.org/docs/stable/generated/torch.nn.Threshold.html
 def load(model, path):
@@ -103,9 +104,9 @@ def load(model, path):
 
   return model
 
-def loss_batch(model, scaler, loss_func, xb, yb, opt=None):
-  prediction = model(xb)
-  loss = loss_func(prediction.flatten(), yb) # TODO: Automate for two outputs
+def loss_batch(model, device, scaler, loss_func, xb, yb, opt=None):
+  prediction = model(xb.to(device))
+  loss = loss_func(prediction.flatten(), yb.to(device)) # TODO: Automate for two outputs
 
   if opt is not None:
     scaler.scale(loss).backward()
@@ -125,26 +126,26 @@ def loss_batch(model, scaler, loss_func, xb, yb, opt=None):
 
   return loss.item(), len(xb), [prediction.flatten(), yb]
 
-def train(model, train_dataloader, loss_func, batch_size, epoch):
+def train(model, dev, train_dataloader, loss_func, batch_size, epoch):
   model = model.train()
   scaler = torch.cuda.amp.GradScaler(enabled=True)
 
   with torch.cuda.amp.autocast(enabled=True, cache_enabled=True): # TODO: cache_enabled
     loss, nums, prediction_pairs = zip(
-      *[loss_batch(model, scaler, loss_func, xb, yb) for xb, yb in tqdm.tqdm(train_dataloader)]
+      *[loss_batch(model, dev, scaler, loss_func, xb, yb) for xb, yb in tqdm.tqdm(train_dataloader)]
     )
 
   print(f'Epoch {epoch} train loss: {loss}')
   return model
 
 # TODO: Save results
-def validate(model, val_dataloader, loss_func, batch_size, epoch):
+def validate(model, dev, val_dataloader, loss_func, batch_size, epoch):
   model = model.eval()
   scaler = torch.cuda.amp.GradScaler(enabled=True)
 
   with torch.no_grad():
     loss, nums, prediction_pairs = zip(
-      *[loss_batch(model, scaler, loss_func, xb, yb) for xb, yb in tqdm.tqdm(val_dataloader)]
+      *[loss_batch(model, dev, scaler, loss_func, xb, yb) for xb, yb in tqdm.tqdm(val_dataloader)]
     )
 
   print(f'Epoch {epoch} val loss: {loss}')
@@ -206,24 +207,26 @@ def test_IOU(model, dataset):
 
   return average_iou
 
+# Setup Data
 train_dataset = load_coco('/mnt/scratch_disk/data/coco/data_raw/', 'train')
 subset_idex = list(range(int(len(train_dataset) * sample_percentage)))
 train_subset = torch.utils.data.Subset(train_dataset, subset_idex)
-train_dataloader = DataLoader(train_subset, batch_size=batch_size, shuffle=True, drop_last=True)
+train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True, collate_fn=utils.collate_fn)
 
 val_dataset = load_coco('/mnt/scratch_disk/data/coco/data_raw/', 'val')
-val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
+val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, drop_last=False)
 
-model = initialise_model(selected_model)
+model = initialise_model(selected_model, dev)
 
 if load_model:
   model = load(model, model_path) # Load model
 else: # Train model to be better
   print("Train model ...")
+
   loss_func = nn.functional.cross_entropy
   for epoch in tqdm.tqdm(range(epochs)):
-    model = train(model, train_dataloader, loss_func, batch_size, epoch)
-    validate(model, val_dataloader, loss_func, batch_size, epoch)
+    model = train(model, dev, train_dataloader, loss_func, batch_size, epoch)
+    validate(model, dev, val_dataloader, loss_func, batch_size, epoch)
 
 # Run test on COCO
 print('Final IOU ...')

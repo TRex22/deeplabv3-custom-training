@@ -11,6 +11,7 @@ import gc
 import time
 import json
 import numpy as np
+from pathlib import Path
 
 import torch
 from torch import optim
@@ -54,6 +55,7 @@ def open_config(path):
     config = checkpoint['args']
     epoch = checkpoint['epoch'] + 1
 
+  create_folder(config["save_path"])
   return [config, epoch]
 
 def save_csv(file_path, csv_data):
@@ -123,15 +125,10 @@ def load(model, opt, path):
   return model, opt
 
 def create_folder(path):
-  try:
-    os.mkdir(path)
-  except:
-    return False
+  Path(path).mkdir(parents=True, exist_ok=True)
 
 # Built to be compatible with reference code
 def save(model, opt, epoch, config, save_path):
-  create_folder(save_path)
-
   checkpoint = {
     "model": model.state_dict(),
     "optimizer": opt.state_dict(),

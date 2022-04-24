@@ -318,7 +318,15 @@ if __name__ == '__main__':
     # Based on reference code
     loss_func = nn.functional.cross_entropy
 
-    for epoch in tqdm.tqdm(range(config["epochs"])):
+    pbar = tqdm.tqdm(total=config["epochs"])
+    for epoch in range(config["epochs"]):
+      pbar.write('Training Phase:')
       model, opt = train(model, dev, loss_func, opt, epoch)
+
+      pbar.write('Validation Phase:')
       validate(model, dev, loss_func, epoch)
+
+      pbar.write(f'Save epoch {epoch}:')
       save(model, opt, epoch, config, save_path)
+
+      pbar.update(1)

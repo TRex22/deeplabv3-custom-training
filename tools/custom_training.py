@@ -52,7 +52,7 @@ def open_config(path):
   except:
     checkpoint = torch.load(path)
     config = checkpoint['args']
-    epoch = checkpoint['epoch']
+    epoch = checkpoint['epoch'] + 1
 
   return [config, epoch]
 

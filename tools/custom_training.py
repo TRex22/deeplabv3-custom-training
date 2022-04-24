@@ -28,9 +28,9 @@ from coco_utils import get_coco
 print('Custom train deeplabv3 ...')
 
 if len(sys.argv) == 3: # params: model config
-  config = open_config(sys.argv[2])
+  config, start_epoch = open_config(sys.argv[2])
 elif len(sys.argv) == 2: # params: either model or config
-  config = open_config(sys.argv[1])
+  config, start_epoch = open_config(sys.argv[1])
 else:
   raise RuntimeError.new("Invalid Parameters, please add either the model path, config path or both")
 
@@ -65,11 +65,13 @@ def open_config(path):
         raw_json += f"{line}\n"
 
     config = json.loads(raw_json)
+    epoch = 0
   except:
     checkpoint = torch.load(path)
     config = checkpoint['args']
+    epoch = checkpoint['epoch']
 
-  return config
+  return [config, epoch]
 
 # COCO Dataset
 # train_image_path = '/data/data/coco/data_raw/train2017'
@@ -342,7 +344,7 @@ if __name__ == '__main__':
   loss_func = nn.functional.cross_entropy
 
   pbar = tqdm.tqdm(total=config["epochs"])
-  for epoch in range(config["epochs"]):
+  for epoch in range(start_epoch, config["epochs"], 1):
     pbar.write('Training Phase:')
     model, opt = train(model, dev, loss_func, opt, epoch, outer_batch_size)
 

@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=deeplabv3
+#SBATCH --job-name=dlv3SDG
 #SBATCH --output=/home-mscluster/jchalom/deeplabv3_sgd_result.txt
 #SBATCH --ntasks=1
 #SBATCH --time=2550:00

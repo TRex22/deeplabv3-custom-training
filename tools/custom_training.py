@@ -1,4 +1,5 @@
 # https://stackoverflow.com/questions/63892031/how-to-train-deeplabv3-on-custom-dataset-on-pytorch
+import os
 import time
 import numpy as np
 
@@ -24,30 +25,6 @@ from coco_utils import get_coco
 
 print('Custom train deeplabv3 ...')
 
-# TODO: Add in custom configuration / args
-selected_model = 'deeplabv3_resnet50'
-# selected_model = 'deeplabv3_resnet101'
-print(f'Selected Model: {selected_model}')
-
-# TODO: Sub batch
-batch_size = 16
-print(f'Batch Size: {batch_size}')
-
-epochs = 3
-print(f'Epochs: {epochs}')
-
-sample_percentage = 0.25 # 0.1 # 1.0
-print(f'Data sample percent: {sample_percentage}')
-
-lr = 0.02
-momentum = 0.8
-betas = (0.9, 0.999)
-epsilon = 1e-08
-weight_decay = 0
-amsgrad = False
-
-load_model = False
-
 # ResNet50
 # model_path = '/mnt/excelsior/trained_models/deeplabv3_resnet50/model_2.pth'
 # model_path = '/mnt/excelsior/trained_models/deeplabv3_resnet50/model_25.pth' # NaN output ;()
@@ -55,6 +32,25 @@ load_model = False
 # ResNet101
 model_path = '/mnt/excelsior/trained_models/deeplabv3_resnet101/model_2.pth'
 # model_path = '/mnt/excelsior/trained_models/deeplabv3_resnet101/model_18.pth'
+
+save_path = '/data/trained_models/deeplabv3_resnet50/sgd/'
+
+config = {
+  "selected_model": 'deeplabv3_resnet50', # 'deeplabv3_resnet101'
+  "batch_size": 16, # TODO: Sub batch
+  "epochs": 3,
+  "sample_percentage": 0.01, #0.25 # 0.1 # 1.0
+  "lr": 0.02,
+  "momentum": 0.8,
+  "betas": (0.9, 0.999),
+  "epsilon": 1e-08,
+  "weight_decay": 0,
+  "amsgrad": False,
+  "load_model": False,
+  "opt_function": 'SGD' # ADAM
+}
+
+print(f'Selected Model: {config}')
 
 # Load devices
 print(f'Cuda available? {torch.cuda.is_available()}')
@@ -91,34 +87,64 @@ def xavier_uniform_init(layer):
   if type(layer) == nn.Linear or type(layer) == nn.Conv2d:
     nn.init.xavier_uniform_(layer.weight)
 
-def initialise_model(selected_model, dev, pretrained=False, num_classes=21):
-  if selected_model == 'deeplabv3_resnet101':
+def initialise_model(dev, config, pretrained=False, num_classes=21):
+  if config["selected_model"] == 'deeplabv3_resnet101':
     model = models.segmentation.deeplabv3_resnet101(pretrained=pretrained, num_classes=num_classes)
-  elif selected_model == 'deeplabv3_resnet50':
+  elif config["selected_model"] == 'deeplabv3_resnet50':
     model = models.segmentation.deeplabv3_resnet50(pretrained=pretrained, num_classes=num_classes)
   else:
     raise RuntimeError("Invalid model selected.")
 
   # Randomise weights
   model.apply(xavier_uniform_init)
-  return model.to(dev)
 
-# https://pytorch.org/docs/stable/generated/torch.nn.Threshold.html
-def load(model, path):
+  model = model.to(dev)
+
+  # Reference code uses SGD
+  if config["opt_function"] == 'ADAM':
+    opt = torch.optim.Adam(model.parameters(), lr=config["lr"], betas=config["betas"], eps=config["epsilon"], weight_decay=config["weight_decay"], amsgrad=config["amsgrad"])
+  else:
+    opt = optim.SGD(model.parameters(), lr=config["lr"], momentum=config["momentum"])
+
+  return [model, opt]
+
+def load(model, opt, path):
   # Load model weights
   # Training crashed when lr dropped to complex numbers
 
   # TODO: Load optimizer
   print(f'Loading model from: {path}')
-  model.load_state_dict(torch.load(path)['model'], strict=False)
+  checkpoint = torch.load(path)
+  model.load_state_dict(checkpoint['model'], strict=False)
+  opt.load_state_dict(checkpoint['optimizer'], strict=False)
   model.to(dev)
 
   print(f'Model loaded into {summary_dev}!')
   model_stats = summary(model, device=summary_dev)
 
-  return model
+  return model, opt
 
-def loss_batch(model, device, scaler, loss_func, opt, xb, yb):
+def create_folder(path):
+  try:
+    os.mkdir(path)
+  except:
+    print("Error creating folder!")
+
+# Built to be compatible with reference code
+def save(model, opt, epoch, config, save_path):
+  create_folder(save_path)
+
+  checkpoint = {
+    "model": model.state_dict(),
+    "optimizer": opt.state_dict(),
+    # "lr_scheduler": lr_scheduler.state_dict(),
+    "epoch": epoch,
+    "args": config,
+  }
+
+  torch.save(checkpoint, os.path.join(save_path, f"model_{epoch}.pth"))
+
+def loss_batch(model, device, scaler, loss_func, xb, yb, opt=None):
   input = xb.to(device)
   prediction = model(input)
 
@@ -142,10 +168,10 @@ def loss_batch(model, device, scaler, loss_func, opt, xb, yb):
     scaler.scale(loss).backward()
 
     # clip_grad_norm
-    # Unscales the gradients of optimizer's assigned params in-place
+    # Unscales the gradients of optimizer's assigned config in-place
     scaler.unscale_(opt)
 
-    # Since the gradients of optimizer's assigned params are now unscaled, clips as usual.
+    # Since the gradients of optimizer's assigned config are now unscaled, clips as usual.
     # You may use the same value for max_norm here as you would without gradient scaling.
     torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=0.1)
 
@@ -153,36 +179,58 @@ def loss_batch(model, device, scaler, loss_func, opt, xb, yb):
     scaler.update()
     opt.zero_grad(set_to_none=True) # set_to_none=True here can modestly improve performance
 
-  return [loss.cpu().item(), iou_score]
+  return [loss.cpu().item(), iou_score, opt]
 
-def train(model, dev, train_dataloader, loss_func, opt, epoch):
-  model = model.train()
-  scaler = torch.cuda.amp.GradScaler(enabled=True)
-
+def run_loop(model, device, dataloader, scaler, loss_func, opt=None):
   sum_of_loss = 0.0
   sum_of_iou = 0.0
 
-  with torch.cuda.amp.autocast(enabled=True, cache_enabled=True): # TODO: cache_enabled
-    pbar = tqdm.tqdm(total=len(train_dataloader))
+  pbar = tqdm.tqdm(total=len(dataloader))
 
-    for xb, yb in train_dataloader:
-      loss, iou_score = loss_batch(model, dev, scaler, loss_func, opt, xb, yb)
+  for xb, yb in dataloader:
+    loss, iou_score, opt = loss_batch(model, device, scaler, loss_func, xb, yb, opt=opt)
 
-      sum_of_loss += loss
-      sum_of_iou += iou_score
-      pbar.update(1)
+    sum_of_loss += loss
+    sum_of_iou += iou_score
+    pbar.update(1)
 
   # TODO: Save loss
-  final_loss = sum_of_loss / len(val_dataloader)
-  final_iou = sum_of_iou / len(val_dataloader)
+  final_loss = sum_of_loss / len(dataloader)
+  final_iou = sum_of_iou / len(dataloader)
 
-  pbar.write(f'Epoch {epoch} train loss: {final_loss} train IoU: {final_iou}')
-  return model
+  if opt is not None:
+    pbar.write(f'Epoch {epoch} train loss: {final_loss} train IoU: {final_iou}')
+  else:
+    pbar.write(f'Epoch {epoch} train loss: {final_loss} val IoU: {final_iou}')
+
+  return [final_loss, final_iou, opt]
+
+def train(model, device, loss_func, opt, epoch):
+  # Load Data - in train step to save memory
+  train_dataset = load_coco('/mnt/scratch_disk/data/coco/data_raw/', 'train')
+  subset_idex = list(range(int(len(train_dataset) * config["sample_percentage"]))) # TODO: Unload others
+  train_subset = torch.utils.data.Subset(train_dataset, subset_idex)
+  train_dataloader = DataLoader(train_subset, batch_size=config["batch_size"], shuffle=True, drop_last=True, collate_fn=utils.collate_fn)
+
+  model = model.train()
+  scaler = torch.cuda.amp.GradScaler(enabled=True)
+
+  with torch.cuda.amp.autocast(enabled=True, cache_enabled=True): # TODO: cache_enabled
+    final_loss, final_iou, opt = run_loop(model, device, train_dataloader, scaler, loss_func, opt=opt)
+
+  del train_dataloader
+  del train_dataset
+
+  return [model, opt]
 
 # TODO: Save results
 # TODO: Early stopping
 # TODO: Dynamic lr
-def validate(model, dev, val_dataloader, loss_func, opt, epoch):
+def validate(model, device, loss_func, epoch):
+  # Load Data - in val step to save memory
+  val_dataset = load_coco('/mnt/scratch_disk/data/coco/data_raw/', 'val')
+  val_dataloader = DataLoader(val_dataset, batch_size=4, shuffle=False, drop_last=True, collate_fn=utils.collate_fn)
+
   model = model.eval()
   scaler = torch.cuda.amp.GradScaler(enabled=True)
 
@@ -192,17 +240,10 @@ def validate(model, dev, val_dataloader, loss_func, opt, epoch):
   pbar = tqdm.tqdm(total=len(val_dataloader))
 
   with torch.no_grad():
-    for xb, yb in val_dataloader:
-      loss, iou_score = loss_batch(model, dev, scaler, loss_func, opt, xb, yb)
+    final_loss, final_iou, _opt = run_loop(model, device, val_dataloader, scaler, loss_func, opt=None)
 
-      sum_of_loss += loss
-      sum_of_iou += iou_score
-      pbar.update(1)
-
-  final_loss = sum_of_loss / len(val_dataloader)
-  final_iou = sum_of_iou / len(val_dataloader)
-
-  pbar.write(f'Epoch {epoch} val loss: {final_loss} val IoU: {final_iou}')
+  del val_dataloader
+  del val_dataset
 
 def process_image(image, device, size=()):
   preprocess = transforms.Compose([
@@ -260,27 +301,24 @@ def test_IOU(model, dataset):
 
   return average_iou
 
-# Setup Data
-train_dataset = load_coco('/mnt/scratch_disk/data/coco/data_raw/', 'train')
-subset_idex = list(range(int(len(train_dataset) * sample_percentage))) # TODO: Unload others
-train_subset = torch.utils.data.Subset(train_dataset, subset_idex)
-train_dataloader = DataLoader(train_subset, batch_size=batch_size, shuffle=True, drop_last=True, collate_fn=utils.collate_fn)
+# Main Loop
+if __name__ == '__main__':
+  try:
+    torch.multiprocessing.set_start_method('spawn')
+  except RuntimeError:
+    pass
 
-# TODO: Load separately
-val_dataset = load_coco('/mnt/scratch_disk/data/coco/data_raw/', 'val')
-val_dataloader = DataLoader(val_dataset, batch_size=1, shuffle=False, drop_last=True, collate_fn=utils.collate_fn)
+  model, opt = initialise_model(dev, config)
 
-model = initialise_model(selected_model, dev)
+  if config["load_model"]:
+    model = load(model, opt, model_path) # Load model
+  else: # Train model to be better
+    print("Train model ...")
 
-if load_model:
-  model = load(model, model_path) # Load model
-else: # Train model to be better
-  print("Train model ...")
+    # Based on reference code
+    loss_func = nn.functional.cross_entropy
 
-  loss_func = nn.functional.cross_entropy
-  opt = optim.SGD(model.parameters(), lr=lr, momentum=momentum)
-  # opt = torch.optim.Adam(model.parameters(), lr=lr, betas=betas, eps=epsilon, weight_decay=weight_decay, amsgrad=amsgrad)
-
-  for epoch in tqdm.tqdm(range(epochs)):
-    model = train(model, dev, train_dataloader, loss_func, opt, epoch)
-    validate(model, dev, val_dataloader, loss_func, opt, epoch)
+    for epoch in tqdm.tqdm(range(config["epochs"])):
+      model, opt = train(model, dev, loss_func, opt, epoch)
+      validate(model, dev, loss_func, epoch)
+      save(model, opt, epoch, config, save_path)

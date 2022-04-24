@@ -110,71 +110,76 @@ def load(model, path):
 
   return model
 
-def loss_batch(model, device, scaler, loss_func, xb, yb, opt=None):
+def loss_batch(model, device, scaler, loss_func, xb, yb):
   input = xb.to(device)
   prediction = model(input)
 
   del input
 
-  out = prediction['out']
+  output = prediction['out']
   target = yb.to(device)
 
-  loss = loss_func(out, target, ignore_index=255)
+  loss = loss_func(output, target, ignore_index=255)
 
-  del out
+  sum_batch_iou_score = 0.0
+  for i in range(output.shape[0]):
+    sum_batch_iou_score += compute_iou(output[i], target[i]).cpu()
+
+  iou_score = sum_batch_iou_score / output.shape[0]
+
+  del output
   del target
 
-  if opt is not None:
-    scaler.scale(loss).backward()
-
-    # clip_grad_norm
-    # Unscales the gradients of optimizer's assigned params in-place
-    scaler.unscale_(opt)
-
-    # Since the gradients of optimizer's assigned params are now unscaled, clips as usual.
-    # You may use the same value for max_norm here as you would without gradient scaling.
-    torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=True)
-
-    # Step
-    scaler.step(opt)
-    scaler.update()
-    opt.zero_grad(set_to_none=True) # set_to_none=True here can modestly improve performance
-
-  return [loss.item()]
+  return [loss.cpu().item(), iou_score]
 
 def train(model, dev, train_dataloader, loss_func, epoch):
   model = model.train()
   scaler = torch.cuda.amp.GradScaler(enabled=True)
-  loss = []
+
+  sum_of_loss = 0.0
+  sum_of_iou = 0.0
 
   with torch.cuda.amp.autocast(enabled=True, cache_enabled=True): # TODO: cache_enabled
     pbar = tqdm.tqdm(total=len(train_dataloader))
 
     for xb, yb in train_dataloader:
-      loss.append(loss_batch(model, dev, scaler, loss_func, xb, yb))
+      loss, iou_score = loss_batch(model, dev, scaler, loss_func, xb, yb)
+
+      sum_of_loss += loss
+      sum_of_iou += iou_score
       pbar.update(1)
 
   # TODO: Save loss
-  loss = np.array(loss)
-  pbar.write(f'Epoch {epoch} train loss: {loss.sum()}')
+  final_loss = sum_of_loss / len(val_dataloader)
+  final_iou = sum_of_iou / len(val_dataloader)
+
+  pbar.write(f'Epoch {epoch} train loss: {final_loss} train IoU: {final_iou}')
   return model
 
 # TODO: Save results
+# TODO: Early stopping
+# TODO: Dynamic lr
 def validate(model, dev, val_dataloader, loss_func, epoch):
   model = model.eval()
   scaler = torch.cuda.amp.GradScaler(enabled=True)
-  loss = []
+
+  sum_of_loss = 0.0
+  sum_of_iou = 0.0
 
   pbar = tqdm.tqdm(total=len(val_dataloader))
 
   with torch.no_grad():
     for xb, yb in val_dataloader:
-      loss.append(loss_batch(model, dev, scaler, loss_func, xb, yb))
+      loss, iou_score = loss_batch(model, dev, scaler, loss_func, xb, yb)
+
+      sum_of_loss += loss
+      sum_of_iou += iou_score
       pbar.update(1)
 
-  loss = np.array(loss)
-  pbar.write(f'Epoch {epoch} val loss: {loss.sum()}')
-  average_iou = test_IOU(model, val_dataloader)
+  final_loss = sum_of_loss / len(val_dataloader)
+  final_iou = sum_of_iou / len(val_dataloader)
+
+  pbar.write(f'Epoch {epoch} val loss: {final_loss} val IoU: {final_iou}')
 
 def process_image(image, device, size=()):
   preprocess = transforms.Compose([
@@ -224,11 +229,11 @@ def test_IOU(model, dataset):
   average_iou = sum_of_iou / len(dataset)
   average_data_load_time = sum_of_data_load_time / len(dataset)
 
-  # tqdm.write(f'Total IoU: {sum_of_iou}')
-  tqdm.write(f'Average IOU: {average_iou}')
+  # print(f'Total IoU: {sum_of_iou}')
+  print(f'Average IOU: {average_iou}')
 
-  # tqdm.write(f'Total Data Load Time: {sum_of_data_load_time}')
-  # tqdm.write(f'Average Data Load Time: {average_data_load_time}')
+  # print(f'Total Data Load Time: {sum_of_data_load_time}')
+  # print(f'Average Data Load Time: {average_data_load_time}')
 
   return average_iou
 
@@ -240,7 +245,7 @@ train_dataloader = DataLoader(train_subset, batch_size=batch_size, shuffle=True,
 
 # TODO: Load separately
 val_dataset = load_coco('/mnt/scratch_disk/data/coco/data_raw/', 'val')
-val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, drop_last=False, collate_fn=utils.collate_fn)
+val_dataloader = DataLoader(val_dataset, batch_size=1, shuffle=False, drop_last=True, collate_fn=utils.collate_fn)
 
 model = initialise_model(selected_model, dev)
 
@@ -253,7 +258,3 @@ else: # Train model to be better
   for epoch in tqdm.tqdm(range(epochs)):
     model = train(model, dev, train_dataloader, loss_func, epoch)
     validate(model, dev, val_dataloader, loss_func, epoch)
-
-# Run test on COCO
-print('Final IOU ...')
-test_IOU(model, val_dataset)

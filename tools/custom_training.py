@@ -1,5 +1,6 @@
 # https://stackoverflow.com/questions/63892031/how-to-train-deeplabv3-on-custom-dataset-on-pytorch
 import os
+import gc
 import time
 import numpy as np
 
@@ -37,9 +38,10 @@ save_path = '/data/trained_models/deeplabv3_resnet50/sgd/'
 
 config = {
   "selected_model": 'deeplabv3_resnet50', # 'deeplabv3_resnet101'
-  "batch_size": 16, # TODO: Sub batch
+  "batch_size": 16,
+  "outer_batch_size_multiplier": 25, #15, # Used to pre-load data
   "epochs": 3,
-  "sample_percentage": 0.01, #0.25 # 0.1 # 1.0
+  "sample_percentage": 0.10, #0.25 # 0.1 # 1.0
   "lr": 0.02,
   "momentum": 0.8,
   "betas": (0.9, 0.999),
@@ -49,6 +51,9 @@ config = {
   "load_model": False,
   "opt_function": 'SGD' # ADAM
 }
+
+# Used for pre-fetching
+outer_batch_size = config["batch_size"] * config['outer_batch_size_multiplier']
 
 print(f'Selected Model: {config}')
 
@@ -128,7 +133,7 @@ def create_folder(path):
   try:
     os.mkdir(path)
   except:
-    print("Error creating folder!")
+    return False
 
 # Built to be compatible with reference code
 def save(model, opt, epoch, config, save_path):
@@ -181,22 +186,38 @@ def loss_batch(model, device, scaler, loss_func, xb, yb, opt=None):
 
   return [loss.cpu().item(), iou_score, opt]
 
-def run_loop(model, device, dataloader, scaler, loss_func, opt=None):
+def run_loop(model, device, dataloader, batch_size, scaler, loss_func, opt=None):
   sum_of_loss = 0.0
   sum_of_iou = 0.0
 
   pbar = tqdm.tqdm(total=len(dataloader))
 
-  for xb, yb in dataloader:
-    loss, iou_score, opt = loss_batch(model, device, scaler, loss_func, xb, yb, opt=opt)
+  # TODO: Allow disabling sub-batches
+  if opt is None:
+    # Dont use sub-batches
+    for xb, yb in tqdm.tqdm(dataloader):
+      loss, iou_score, opt = loss_batch(model, device, scaler, loss_func, xb, yb, opt=opt)
 
-    sum_of_loss += loss
-    sum_of_iou += iou_score
-    pbar.update(1)
+      sum_of_loss += loss
+      sum_of_iou += iou_score
 
-  # TODO: Save loss
-  final_loss = sum_of_loss / len(dataloader)
-  final_iou = sum_of_iou / len(dataloader)
+    final_loss = sum_of_loss / len(dataloader)
+    final_iou = sum_of_iou / len(dataloader)
+  else: # Use sub-batches
+    for inner_batch in dataloader:
+      for i in range(0, inner_batch[0].shape[0], batch_size):
+        xb = inner_batch[0][i:i+batch_size]
+        yb = inner_batch[1][i:i+batch_size]
+
+        loss, iou_score, opt = loss_batch(model, device, scaler, loss_func, xb, yb, opt=opt)
+
+        sum_of_loss += loss
+        sum_of_iou += iou_score
+
+      final_loss = sum_of_loss / (len(dataloader) * batch_size)
+      final_iou = sum_of_iou / (len(dataloader) * batch_size)
+
+      pbar.update(1)
 
   if opt is not None:
     pbar.write(f'Epoch {epoch} train loss: {final_loss} train IoU: {final_iou}')
@@ -205,18 +226,18 @@ def run_loop(model, device, dataloader, scaler, loss_func, opt=None):
 
   return [final_loss, final_iou, opt]
 
-def train(model, device, loss_func, opt, epoch):
+def train(model, device, loss_func, opt, epoch, outer_batch_size):
   # Load Data - in train step to save memory
   train_dataset = load_coco('/mnt/scratch_disk/data/coco/data_raw/', 'train')
   subset_idex = list(range(int(len(train_dataset) * config["sample_percentage"]))) # TODO: Unload others
   train_subset = torch.utils.data.Subset(train_dataset, subset_idex)
-  train_dataloader = DataLoader(train_subset, batch_size=config["batch_size"], shuffle=True, drop_last=True, collate_fn=utils.collate_fn)
+  train_dataloader = DataLoader(train_subset, batch_size=outer_batch_size, shuffle=True, drop_last=True, collate_fn=utils.collate_fn)
 
   model = model.train()
   scaler = torch.cuda.amp.GradScaler(enabled=True)
 
   with torch.cuda.amp.autocast(enabled=True, cache_enabled=True): # TODO: cache_enabled
-    final_loss, final_iou, opt = run_loop(model, device, train_dataloader, scaler, loss_func, opt=opt)
+    final_loss, final_iou, opt = run_loop(model, device, train_dataloader, config["batch_size"], scaler, loss_func, opt=opt)
 
   del train_dataloader
   del train_dataset
@@ -226,10 +247,11 @@ def train(model, device, loss_func, opt, epoch):
 # TODO: Save results
 # TODO: Early stopping
 # TODO: Dynamic lr
-def validate(model, device, loss_func, epoch):
+def validate(model, device, loss_func, epoch, outer_batch_size):
   # Load Data - in val step to save memory
+  validation_batch_size = 8
   val_dataset = load_coco('/mnt/scratch_disk/data/coco/data_raw/', 'val')
-  val_dataloader = DataLoader(val_dataset, batch_size=4, shuffle=False, drop_last=True, collate_fn=utils.collate_fn)
+  val_dataloader = DataLoader(val_dataset, batch_size=validation_batch_size, shuffle=False, drop_last=True, collate_fn=utils.collate_fn)
 
   model = model.eval()
   scaler = torch.cuda.amp.GradScaler(enabled=True)
@@ -240,7 +262,7 @@ def validate(model, device, loss_func, epoch):
   pbar = tqdm.tqdm(total=len(val_dataloader))
 
   with torch.no_grad():
-    final_loss, final_iou, _opt = run_loop(model, device, val_dataloader, scaler, loss_func, opt=None)
+    final_loss, final_iou, _opt = run_loop(model, device, val_dataloader, validation_batch_size, scaler, loss_func, opt=None)
 
   del val_dataloader
   del val_dataset
@@ -312,21 +334,24 @@ if __name__ == '__main__':
 
   if config["load_model"]:
     model = load(model, opt, model_path) # Load model
-  else: # Train model to be better
-    print("Train model ...")
 
-    # Based on reference code
-    loss_func = nn.functional.cross_entropy
+  # Based on reference code
+  loss_func = nn.functional.cross_entropy
 
-    pbar = tqdm.tqdm(total=config["epochs"])
-    for epoch in range(config["epochs"]):
-      pbar.write('Training Phase:')
-      model, opt = train(model, dev, loss_func, opt, epoch)
+  pbar = tqdm.tqdm(total=config["epochs"])
+  for epoch in range(config["epochs"]):
+    pbar.write('Training Phase:')
+    model, opt = train(model, dev, loss_func, opt, epoch, outer_batch_size)
 
-      pbar.write('Validation Phase:')
-      validate(model, dev, loss_func, epoch)
+    pbar.write('Validation Phase:')
+    # If you need to purge memory
+    # gc.collect() # Force the Training data to be unloaded. Loading data takes ~10 secs
+    # time.sleep(30)
+    # torch.cuda.empty_cache()
+    # torch.cuda.synchronize()
+    validate(model, dev, loss_func, epoch, outer_batch_size)
 
-      pbar.write(f'Save epoch {epoch}:')
-      save(model, opt, epoch, config, save_path)
+    pbar.write(f'Save epoch {epoch}:')
+    save(model, opt, epoch, config, save_path)
 
-      pbar.update(1)
+    pbar.update(1)

@@ -28,13 +28,13 @@ selected_model = 'deeplabv3_resnet50'
 # selected_model = 'deeplabv3_resnet101'
 print(f'Selected Model: {selected_model}')
 
-batch_size = 42
+batch_size = 16
 print(f'Batch Size: {batch_size}')
 
 epochs = 1
 print(f'Epochs: {epochs}')
 
-sample_percentage = 0.1 # 1.0
+sample_percentage = 0.05 # 0.1 # 1.0
 print(f'Data sample percent: {sample_percentage}')
 
 load_model = False

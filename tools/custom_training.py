@@ -53,6 +53,10 @@ def open_config(path):
 
   return [config, epoch]
 
+def save_csv(file_path, csv_data):
+  with open(file_path, 'a') as f:
+    f.write(f'{csv_data}\n')
+
 # COCO Dataset
 # train_image_path = '/data/data/coco/data_raw/train2017'
 # val_image_path = '/data/data/coco/data_raw/val2017'
@@ -207,8 +211,14 @@ def run_loop(model, device, dataloader, batch_size, scaler, loss_func, opt=None)
 
   if opt is not None:
     pbar.write(f'Epoch {epoch} train loss: {final_loss} train IoU: {final_iou}')
+
+    train_csv_path = f'{config["save_path"]}/train_loss.csv'
+    save_csv(train_csv_path, f'{final_loss},{final_iou}')
   else:
     pbar.write(f'Epoch {epoch} val loss: {final_loss} val IoU: {final_iou}')
+
+    val_csv_path = f'{config["save_path"]}/val_loss.csv'
+    save_csv(val_csv_path, f'{final_loss},{final_iou}')
 
   return [final_loss, final_iou, opt]
 

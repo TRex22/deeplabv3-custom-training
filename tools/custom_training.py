@@ -331,7 +331,7 @@ if __name__ == '__main__':
     # torch.cuda.synchronize()
     validate(model, dev, loss_func, epoch, outer_batch_size)
 
-    pbar.write(f'Save epoch {epoch}:')
+    pbar.write(f'Save epoch {epoch}.')
     save(model, opt, epoch, config, save_path)
 
     pbar.update(1)

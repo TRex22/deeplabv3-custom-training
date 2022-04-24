@@ -290,6 +290,7 @@ config, start_epoch = open_config(config_path)
 # Used for pre-fetching
 outer_batch_size = config["batch_size"] * config['outer_batch_size_multiplier']
 betas = (config["beta_1"], config["beta_2"])
+config["betas"] = betas
 save_path = config["save_path"]
 
 print(f'Config: {config}')

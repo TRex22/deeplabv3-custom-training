@@ -2,6 +2,9 @@
 # Usage: python3 custom_tarining.py ./model_42.pth
 # Usage: python3 custom_tarining.py ./model_42.pth ./config.json # Will use the custom config
 
+# TODO: Early stopping
+# TODO: Dynamic lr
+
 # https://stackoverflow.com/questions/63892031/how-to-train-deeplabv3-on-custom-dataset-on-pytorch
 import os
 import gc

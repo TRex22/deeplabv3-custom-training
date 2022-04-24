@@ -28,7 +28,7 @@ selected_model = 'deeplabv3_resnet50'
 # selected_model = 'deeplabv3_resnet101'
 print(f'Selected Model: {selected_model}')
 
-batch_size = 2
+batch_size = 42
 print(f'Batch Size: {batch_size}')
 
 epochs = 1
@@ -70,7 +70,12 @@ def load_coco(root, image_set):
   # Using reference code
   # See Readme.md for new category list
   category_list = [0, 5, 2, 16, 9, 44, 6, 3, 17, 62, 21, 67, 18, 19, 4, 1, 64, 20, 63, 7, 72]
-  transforms = presets.SegmentationPresetEval(base_size=520)
+
+  if image_set == 'train':
+    transforms = presets.SegmentationPresetTrain(base_size=520, crop_size=480)
+  else:
+    transforms = presets.SegmentationPresetEval(base_size=520)
+
   return get_coco(root, image_set, transforms, category_list=category_list)
 
 def xavier_uniform_init(layer):
@@ -105,8 +110,18 @@ def load(model, path):
   return model
 
 def loss_batch(model, device, scaler, loss_func, xb, yb, opt=None):
-  prediction = model(xb.to(device))
-  loss = loss_func(prediction['out'], yb.to(device), ignore_index=255)
+  input = xb.to(device)
+  prediction = model(input)
+
+  del input
+
+  out = prediction['out']
+  target = yb.to(device)
+
+  loss = loss_func(out, target, ignore_index=255)
+
+  del out
+  del target
 
   if opt is not None:
     scaler.scale(loss).backward()
@@ -124,14 +139,14 @@ def loss_batch(model, device, scaler, loss_func, xb, yb, opt=None):
     scaler.update()
     opt.zero_grad(set_to_none=True) # set_to_none=True here can modestly improve performance
 
-  return loss.item(), len(xb), [prediction.flatten(), yb]
+  return loss.item()
 
-def train(model, dev, train_dataloader, loss_func, batch_size, epoch):
+def train(model, dev, train_dataloader, loss_func, epoch):
   model = model.train()
   scaler = torch.cuda.amp.GradScaler(enabled=True)
 
   with torch.cuda.amp.autocast(enabled=True, cache_enabled=True): # TODO: cache_enabled
-    loss, nums, prediction_pairs = zip(
+    loss = zip(
       *[loss_batch(model, dev, scaler, loss_func, xb, yb) for xb, yb in tqdm.tqdm(train_dataloader)]
     )
 
@@ -139,12 +154,12 @@ def train(model, dev, train_dataloader, loss_func, batch_size, epoch):
   return model
 
 # TODO: Save results
-def validate(model, dev, val_dataloader, loss_func, batch_size, epoch):
+def validate(model, dev, val_dataloader, loss_func, epoch):
   model = model.eval()
   scaler = torch.cuda.amp.GradScaler(enabled=True)
 
   with torch.no_grad():
-    loss, nums, prediction_pairs = zip(
+    loss = zip(
       *[loss_batch(model, dev, scaler, loss_func, xb, yb) for xb, yb in tqdm.tqdm(val_dataloader)]
     )
 
@@ -226,8 +241,8 @@ else: # Train model to be better
 
   loss_func = nn.functional.cross_entropy
   for epoch in tqdm.tqdm(range(epochs)):
-    model = train(model, dev, train_dataloader, loss_func, batch_size, epoch)
-    validate(model, dev, val_dataloader, loss_func, batch_size, epoch)
+    model = train(model, dev, train_dataloader, loss_func, epoch)
+    validate(model, dev, val_dataloader, loss_func, epoch)
 
 # Run test on COCO
 print('Final IOU ...')

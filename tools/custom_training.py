@@ -2,6 +2,7 @@
 import os
 import gc
 import time
+import json
 import numpy as np
 
 import torch
@@ -26,36 +27,21 @@ from coco_utils import get_coco
 
 print('Custom train deeplabv3 ...')
 
-# ResNet50
-# model_path = '/mnt/excelsior/trained_models/deeplabv3_resnet50/model_2.pth'
-# model_path = '/mnt/excelsior/trained_models/deeplabv3_resnet50/model_25.pth' # NaN output ;()
+if len(sys.argv) == 3: # params: model config
+  config = open_config(sys.argv[2])
+elif len(sys.argv) == 2: # params: either model or config
+  config = open_config(sys.argv[1])
+else:
+  raise RuntimeError.new("Invalid Parameters, please add either the model path, config path or both")
 
-# ResNet101
-model_path = '/mnt/excelsior/trained_models/deeplabv3_resnet101/model_2.pth'
-# model_path = '/mnt/excelsior/trained_models/deeplabv3_resnet101/model_18.pth'
-
-save_path = '/data/trained_models/deeplabv3_resnet50/sgd/'
-
-config = {
-  "selected_model": 'deeplabv3_resnet50', # 'deeplabv3_resnet101'
-  "batch_size": 16,
-  "outer_batch_size_multiplier": 25, #15, # Used to pre-load data
-  "epochs": 3,
-  "sample_percentage": 0.10, #0.25 # 0.1 # 1.0
-  "lr": 0.02,
-  "momentum": 0.8,
-  "betas": (0.9, 0.999),
-  "epsilon": 1e-08,
-  "weight_decay": 0,
-  "amsgrad": False,
-  "load_model": False,
-  "opt_function": 'SGD' # ADAM
-}
+print(f'Config path: {config_path}')
 
 # Used for pre-fetching
 outer_batch_size = config["batch_size"] * config['outer_batch_size_multiplier']
+betas = (config["beta_1"], config["beta_2"])
+save_path = config["save_path"]
 
-print(f'Selected Model: {config}')
+print(f'Config: {config}')
 
 # Load devices
 print(f'Cuda available? {torch.cuda.is_available()}')
@@ -66,6 +52,24 @@ summary_dev = 'cpu'
 if torch.cuda.is_available():
   dev = torch.device('cuda')
   summary_dev = 'cuda'
+
+# Will either open the config path or get config from model checkpoint
+def open_config(path):
+  try:
+    # Remove comments first
+    raw_json = ""
+    with open(path) as f:
+      for line in f:
+        line = line.partition('//')[0]
+        line = line.rstrip()
+        raw_json += f"{line}\n"
+
+    config = json.loads(raw_json)
+  except:
+    checkpoint = torch.load(path)
+    config = checkpoint['args']
+
+  return config
 
 # COCO Dataset
 # train_image_path = '/data/data/coco/data_raw/train2017'
@@ -222,13 +226,13 @@ def run_loop(model, device, dataloader, batch_size, scaler, loss_func, opt=None)
   if opt is not None:
     pbar.write(f'Epoch {epoch} train loss: {final_loss} train IoU: {final_iou}')
   else:
-    pbar.write(f'Epoch {epoch} train loss: {final_loss} val IoU: {final_iou}')
+    pbar.write(f'Epoch {epoch} val loss: {final_loss} val IoU: {final_iou}')
 
   return [final_loss, final_iou, opt]
 
 def train(model, device, loss_func, opt, epoch, outer_batch_size):
   # Load Data - in train step to save memory
-  train_dataset = load_coco('/mnt/scratch_disk/data/coco/data_raw/', 'train')
+  train_dataset = load_coco(config['coco_path'], 'train')
   subset_idex = list(range(int(len(train_dataset) * config["sample_percentage"]))) # TODO: Unload others
   train_subset = torch.utils.data.Subset(train_dataset, subset_idex)
   train_dataloader = DataLoader(train_subset, batch_size=outer_batch_size, shuffle=True, drop_last=True, collate_fn=utils.collate_fn)
@@ -249,9 +253,8 @@ def train(model, device, loss_func, opt, epoch, outer_batch_size):
 # TODO: Dynamic lr
 def validate(model, device, loss_func, epoch, outer_batch_size):
   # Load Data - in val step to save memory
-  validation_batch_size = 8
-  val_dataset = load_coco('/mnt/scratch_disk/data/coco/data_raw/', 'val')
-  val_dataloader = DataLoader(val_dataset, batch_size=validation_batch_size, shuffle=False, drop_last=True, collate_fn=utils.collate_fn)
+  val_dataset = load_coco(config['coco_path'], 'val')
+  val_dataloader = DataLoader(val_dataset, batch_size=config["val_batch_size"], shuffle=False, drop_last=True, collate_fn=utils.collate_fn)
 
   model = model.eval()
   scaler = torch.cuda.amp.GradScaler(enabled=True)
@@ -262,7 +265,7 @@ def validate(model, device, loss_func, epoch, outer_batch_size):
   pbar = tqdm.tqdm(total=len(val_dataloader))
 
   with torch.no_grad():
-    final_loss, final_iou, _opt = run_loop(model, device, val_dataloader, validation_batch_size, scaler, loss_func, opt=None)
+    final_loss, final_iou, _opt = run_loop(model, device, val_dataloader, config["val_batch_size"], scaler, loss_func, opt=None)
 
   del val_dataloader
   del val_dataset
@@ -323,7 +326,7 @@ def test_IOU(model, dataset):
 
   return average_iou
 
-# Main Loop
+# Main Thread
 if __name__ == '__main__':
   try:
     torch.multiprocessing.set_start_method('spawn')

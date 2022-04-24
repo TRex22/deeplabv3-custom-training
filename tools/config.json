@@ -1,0 +1,19 @@
+{
+  "selected_model": "deeplabv3_resnet50", // "deeplabv3_resnet101"
+  "batch_size": 16,
+  "val_batch_size": 1,
+  "outer_batch_size_multiplier": 25, //15, // Used to pre-load data
+  "epochs": 3,
+  "sample_percentage": 0.10, //0.25 // 0.1 // 1.0
+  "lr": 0.02,
+  "momentum": 0.8,
+  "beta_1": 0.9,
+  "beta_2": 0.999,
+  "epsilon": 1e-08,
+  "weight_decay": 0,
+  "amsgrad": false,
+  "load_model": false,
+  "opt_function": "SGD", // "ADAM",
+  "save_path": "/data/trained_models/deeplabv3_resnet50/sgd/",
+  "coco_path": "/mnt/scratch_disk/data/coco/data_raw/"
+}

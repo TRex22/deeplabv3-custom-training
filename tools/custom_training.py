@@ -70,7 +70,7 @@ def load_coco(root, image_set):
   # See Readme.md for new category list
   category_list = [0, 5, 2, 16, 9, 44, 6, 3, 17, 62, 21, 67, 18, 19, 4, 1, 64, 20, 63, 7, 72]
   transforms = presets.SegmentationPresetEval(base_size=520)
-  return get_coco(root, image_set, transforms)
+  return get_coco(root, image_set, transforms, category_list=category_list)
 
 def xavier_uniform_init(layer):
   if type(layer) == nn.Linear or type(layer) == nn.Conv2d:

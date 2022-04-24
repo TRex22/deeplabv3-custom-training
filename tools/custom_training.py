@@ -28,13 +28,14 @@ selected_model = 'deeplabv3_resnet50'
 # selected_model = 'deeplabv3_resnet101'
 print(f'Selected Model: {selected_model}')
 
+# TODO: Sub batch
 batch_size = 16
 print(f'Batch Size: {batch_size}')
 
 epochs = 1
 print(f'Epochs: {epochs}')
 
-sample_percentage = 0.1 # 0.1 # 1.0
+sample_percentage = 0.01 # 0.1 # 1.0
 print(f'Data sample percent: {sample_percentage}')
 
 load_model = False
@@ -139,31 +140,40 @@ def loss_batch(model, device, scaler, loss_func, xb, yb, opt=None):
     scaler.update()
     opt.zero_grad(set_to_none=True) # set_to_none=True here can modestly improve performance
 
-  return loss.item()
+  return [loss.item()]
 
 def train(model, dev, train_dataloader, loss_func, epoch):
   model = model.train()
   scaler = torch.cuda.amp.GradScaler(enabled=True)
+  loss = []
 
   with torch.cuda.amp.autocast(enabled=True, cache_enabled=True): # TODO: cache_enabled
-    loss = zip(
-      *[loss_batch(model, dev, scaler, loss_func, xb, yb) for xb, yb in tqdm.tqdm(train_dataloader)]
-    )
+    pbar = tqdm.tqdm(total=len(train_dataloader))
 
-  print(f'Epoch {epoch} train loss: {loss}')
+    for xb, yb in train_dataloader:
+      loss.append(loss_batch(model, dev, scaler, loss_func, xb, yb))
+      pbar.update(1)
+
+  # TODO: Save loss
+  loss = np.array(loss)
+  pbar.write(f'Epoch {epoch} train loss: {loss.sum()}')
   return model
 
 # TODO: Save results
 def validate(model, dev, val_dataloader, loss_func, epoch):
   model = model.eval()
   scaler = torch.cuda.amp.GradScaler(enabled=True)
+  loss = []
+
+  pbar = tqdm.tqdm(total=len(val_dataloader))
 
   with torch.no_grad():
-    loss = zip(
-      *[loss_batch(model, dev, scaler, loss_func, xb, yb) for xb, yb in tqdm.tqdm(val_dataloader)]
-    )
+    for xb, yb in val_dataloader:
+      loss.append(loss_batch(model, dev, scaler, loss_func, xb, yb))
+      pbar.update(1)
 
-  print(f'Epoch {epoch} val loss: {loss}')
+  loss = np.array(loss)
+  pbar.write(f'Epoch {epoch} val loss: {loss.sum()}')
   average_iou = test_IOU(model, val_dataloader)
 
 def process_image(image, device, size=()):
@@ -214,11 +224,11 @@ def test_IOU(model, dataset):
   average_iou = sum_of_iou / len(dataset)
   average_data_load_time = sum_of_data_load_time / len(dataset)
 
-  # print(f'Total IoU: {sum_of_iou}')
-  print(f'Average IOU: {average_iou}')
+  # tqdm.write(f'Total IoU: {sum_of_iou}')
+  tqdm.write(f'Average IOU: {average_iou}')
 
-  # print(f'Total Data Load Time: {sum_of_data_load_time}')
-  # print(f'Average Data Load Time: {average_data_load_time}')
+  # tqdm.write(f'Total Data Load Time: {sum_of_data_load_time}')
+  # tqdm.write(f'Average Data Load Time: {average_data_load_time}')
 
   return average_iou
 
@@ -230,7 +240,7 @@ train_dataloader = DataLoader(train_subset, batch_size=batch_size, shuffle=True,
 
 # TODO: Load separately
 val_dataset = load_coco('/mnt/scratch_disk/data/coco/data_raw/', 'val')
-val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, drop_last=False)
+val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, drop_last=False, collate_fn=utils.collate_fn)
 
 model = initialise_model(selected_model, dev)
 

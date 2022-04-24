@@ -1,3 +1,7 @@
+# Usage: python3 custom_tarining.py ./config.json
+# Usage: python3 custom_tarining.py ./model_42.pth
+# Usage: python3 custom_tarining.py ./model_42.pth ./config.json # Will use the custom config
+
 # https://stackoverflow.com/questions/63892031/how-to-train-deeplabv3-on-custom-dataset-on-pytorch
 import os
 import gc
@@ -25,33 +29,9 @@ import presets
 import utils
 from coco_utils import get_coco
 
-print('Custom train deeplabv3 ...')
-
-if len(sys.argv) == 3: # params: model config
-  config, start_epoch = open_config(sys.argv[2])
-elif len(sys.argv) == 2: # params: either model or config
-  config, start_epoch = open_config(sys.argv[1])
-else:
-  raise RuntimeError.new("Invalid Parameters, please add either the model path, config path or both")
-
-print(f'Config path: {config_path}')
-
-# Used for pre-fetching
-outer_batch_size = config["batch_size"] * config['outer_batch_size_multiplier']
-betas = (config["beta_1"], config["beta_2"])
-save_path = config["save_path"]
-
-print(f'Config: {config}')
-
-# Load devices
-print(f'Cuda available? {torch.cuda.is_available()}')
-
-dev = torch.device('cpu')
-summary_dev = 'cpu'
-
-if torch.cuda.is_available():
-  dev = torch.device('cuda')
-  summary_dev = 'cuda'
+################################################################################
+# Helper Methids                                                               #
+################################################################################
 
 # Will either open the config path or get config from model checkpoint
 def open_config(path):
@@ -328,7 +308,39 @@ def test_IOU(model, dataset):
 
   return average_iou
 
-# Main Thread
+################################################################################
+# Main Thread                                                                  #
+################################################################################
+
+print('Custom train deeplabv3 ...')
+
+if len(sys.argv) == 3: # params: model config
+  config_path = sys.argv[2]
+elif len(sys.argv) == 2: # params: either model or config
+  config_path= sys.argv[1]
+else:
+  raise RuntimeError.new("Invalid Parameters, please add either the model path, config path or both")
+
+print(f'Config/Model path: {config_path}')
+config, start_epoch = open_config(config_path)
+
+# Used for pre-fetching
+outer_batch_size = config["batch_size"] * config['outer_batch_size_multiplier']
+betas = (config["beta_1"], config["beta_2"])
+save_path = config["save_path"]
+
+print(f'Config: {config}')
+
+# Load devices
+print(f'Cuda available? {torch.cuda.is_available()}')
+
+dev = torch.device('cpu')
+summary_dev = 'cpu'
+
+if torch.cuda.is_available():
+  dev = torch.device('cuda')
+  summary_dev = 'cuda'
+
 if __name__ == '__main__':
   try:
     torch.multiprocessing.set_start_method('spawn')

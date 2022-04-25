@@ -8,7 +8,7 @@ import custom_utils
 print('Generate Segmentation ...')
 
 if len(sys.argv) != 4:
-  raise RuntimeError.new("Invalid Parameters, model_path, input_image_path and save_path are required.")
+  raise RuntimeError("Invalid Parameters, model_path, input_image_path and save_path are required.")
 
 model_path = sys.argv[1]
 input_image_path = sys.argv[2]

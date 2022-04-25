@@ -88,16 +88,21 @@ def load_dataset(config, root, image_set, category_list=None, batch_size=1, samp
     dataset = torchvision.datasets.Cityscapes(root, split=image_set, mode='fine', target_type='semantic', transforms=cityscapes_transforms()) # TODO: Cityscapes 'test'
 
   sample_size = len(dataset) * config["sample_percentage"]
-  if sample_size < batch_size or not sample:
+  if sample:
     sample_size = len(dataset)
 
-  subset_idex = list(range(int(sample_size))) # TODO: Unload others
-  subset = torch.utils.data.Subset(dataset, subset_idex)
+    subset_idex = list(range(int(sample_size))) # TODO: Unload others
+    subset = torch.utils.data.Subset(dataset, subset_idex)
 
-  if config["dataset"] == "cityscapes":
-    dataloader = DataLoader(subset, batch_size=batch_size, shuffle=True, drop_last=True, collate_fn=cityscapes_collate)
+    if config["dataset"] == "cityscapes":
+      dataloader = DataLoader(subset, batch_size=batch_size, shuffle=True, drop_last=True, collate_fn=cityscapes_collate)
+    else:
+      dataloader = DataLoader(subset, batch_size=batch_size, shuffle=True, drop_last=True, collate_fn=utils.collate_fn)
   else:
-    dataloader = DataLoader(subset, batch_size=batch_size, shuffle=True, drop_last=True, collate_fn=utils.collate_fn)
+    if config["dataset"] == "cityscapes":
+      dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, drop_last=True, collate_fn=cityscapes_collate)
+    else:
+      dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, drop_last=True, collate_fn=utils.collate_fn)
 
   # print(f'Number of data points for {image_set}: {len(dataloader)}')
   return [dataset, dataloader]

@@ -62,8 +62,8 @@ def cityscapes_transforms():
   transforms_arr = T.Compose(
     [
       T.RandomCrop(520),
-      T.PILToNumpy(),
-      # T.ConvertImageDtype(torch.float16),
+      T.PILToTensor(),
+      T.ConvertImageDtype(torch.float16),
       T.Normalize(mean=mean, std=std),
     ]
   )
@@ -73,11 +73,11 @@ def cityscapes_transforms():
 def cityscapes_collate(batch):
   images, targets = list(zip(*batch))
 
-  images = torch.as_tensor(np.array(images))
-  targets = torch.as_tensor(np.array(targets))
+  images = np.array(images)
+  targets = np.array(images)
 
   # torch.as_tensor(np.array(target), dtype=torch.int32)
-  return torch.from_numpy(np.array([images, targets]))
+  return torch.as_tensor(np.array([images, targets]))
 
 def load_dataset(config, root, image_set, category_list=None, batch_size=1, sample=False):
   if config["dataset"] == "COCO16" or config["dataset"] == "COCO21":

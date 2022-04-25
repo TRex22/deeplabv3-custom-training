@@ -74,12 +74,6 @@ class CenterCrop:
         return image, target
 
 
-class PILToNumpy:
-    def __call__(self, image, target):
-        image = np.array(image)
-        target = np.array(target)
-        return image, target
-
 class PILToTensor:
     def __call__(self, image, target):
         image = F.pil_to_tensor(image)

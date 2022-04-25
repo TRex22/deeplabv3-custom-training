@@ -250,7 +250,7 @@ def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, co
   if opt is None: # Validation
     # Dont use sub-batches
     for xb, yb in tqdm.tqdm(dataloader):
-      loss, dice_loss, iou_score, _opt = loss_batch(model, device, scaler, loss_func, xb, yb)
+      loss, dice_loss, iou_score, _opt = loss_batch(model, device, scaler, loss_func, xb, yb, opt=opt)
 
       sum_of_loss += loss
       sum_of_iou += iou_score
@@ -279,6 +279,8 @@ def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, co
         sum_of_iou += iou_score
         sum_of_dice += dice_loss
 
+      pbar.update(1)
+
     final_loss = sum_of_loss / (len(dataloader) * batch_size)
     final_iou = sum_of_iou / (len(dataloader) * batch_size)
     final_dice = sum_of_dice / (len(dataloader) * batch_size)
@@ -289,8 +291,6 @@ def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, co
 
     if save:
       save_csv(train_csv_path, f'{final_loss},{final_iou},{final_dice}')
-
-    pbar.update(1)
 
   return [final_loss, final_iou, opt]
 

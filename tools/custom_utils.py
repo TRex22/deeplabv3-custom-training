@@ -61,7 +61,10 @@ def load_dataset(config, root, image_set, category_list=None, batch_size=1, samp
     dataset = torchvision.datasets.Cityscapes(root, split=image_set, mode='fine', target_type='semantic') # TODO: Cityscapes 'test'
 
   sample_size = len(dataset) * config["sample_percentage"]
-  if sample and sample_size > batch_size:
+  if sample_size < batch_size:
+    sample_size = len(dataset)
+
+  if sample:
     subset_idex = list(range(int(sample_size))) # TODO: Unload others
     subset = torch.utils.data.Subset(dataset, subset_idex)
 

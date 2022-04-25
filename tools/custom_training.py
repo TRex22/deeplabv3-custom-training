@@ -20,8 +20,6 @@ import custom_utils
 
 print('Custom train deeplabv3 ...')
 
-category_list = custom_utils.fetch_category_list(config)
-
 if len(sys.argv) == 3: # params: model config
   config_path = sys.argv[2]
 elif len(sys.argv) == 2: # params: either model or config
@@ -49,6 +47,7 @@ if __name__ == '__main__':
   except RuntimeError:
     pass
 
+  category_list = custom_utils.fetch_category_list(config)
   model, opt = custom_utils.initialise_model(dev, config, num_classes=len(category_list))
 
   if config["load_model"]:

@@ -180,7 +180,7 @@ def loss_batch(model, device, scaler, loss_func, xb, yb, opt=None):
 
   return [loss.cpu().item(), dice_loss, iou_score, opt]
 
-def run_loop(model, device, dataloader, batch_size, scaler, loss_func, opt=None):
+def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, opt=None):
   sum_of_loss = 0.0
   sum_of_iou = 0.0
   sum_of_dice = 0.0
@@ -242,7 +242,7 @@ def train(model, device, loss_func, opt, epoch, config, outer_batch_size):
   scaler = torch.cuda.amp.GradScaler(enabled=True)
 
   with torch.cuda.amp.autocast(enabled=True, cache_enabled=True): # TODO: cache_enabled
-    final_loss, final_iou, opt = run_loop(model, device, train_dataloader, config["batch_size"], scaler, loss_func, opt=opt)
+    final_loss, final_iou, opt = run_loop(model, device, train_dataloader, config["batch_size"], scaler, loss_func, epoch, opt=opt)
 
   del train_dataloader
   del train_dataset
@@ -263,7 +263,7 @@ def validate(model, device, loss_func, epoch, config):
   pbar = tqdm.tqdm(total=len(val_dataloader))
 
   with torch.no_grad():
-    final_loss, final_iou, _opt = run_loop(model, device, val_dataloader, config["val_batch_size"], scaler, loss_func, opt=None)
+    final_loss, final_iou, _opt = run_loop(model, device, val_dataloader, config["val_batch_size"], scaler, loss_func, epoch, opt=None)
 
   del val_dataloader
   del val_dataset

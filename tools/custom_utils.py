@@ -62,7 +62,7 @@ def load_dataset(config, root, image_set, category_list=None, batch_size=1, samp
 
   if sample:
     subset_idex = list(range(int(len(dataset) * config["sample_percentage"]))) # TODO: Unload others
-    subset = torch.utils.data.Subset(train_dataset, subset_idex)
+    subset = torch.utils.data.Subset(dataset, subset_idex)
 
   if config["dataset"] == "cityscapes":
     dataloader = DataLoader(subset, batch_size=batch_size, shuffle=True, drop_last=True)

@@ -61,7 +61,7 @@ def cityscapes_transforms():
 
   transforms_arr = T.Compose(
     [
-      T.RandomCrop(520, 520),
+      T.RandomCrop(520),
       T.PILToTensor(),
       T.ConvertImageDtype(torch.float16),
       T.Normalize(mean=mean, std=std),

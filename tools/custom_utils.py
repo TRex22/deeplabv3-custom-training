@@ -54,7 +54,7 @@ def save_csv(file_path, csv_data):
   with open(file_path, 'a') as f:
     f.write(f'{csv_data}\n')
 
-def load_dataset(config, root, image_set, category_list=None, batch_size=, sample=False):
+def load_dataset(config, root, image_set, category_list=None, batch_size=1, sample=False):
   if config["dataset"] == "COCO16" or config["dataset"] == "COCO21":
     dataset = load_coco(root, image_set, category_list=category_list)
   elif config["dataset"] == "cityscapes":

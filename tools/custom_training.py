@@ -278,8 +278,8 @@ def compute_iou(output, target):
 # https://stackoverflow.com/questions/47084179/how-to-calculate-multi-class-dice-coefficient-for-multiclass-image-segmentation
 def dice_coef(y_true, y_pred, epsilon=1e-6):
   # Altered Sorensen–Dice coefficient with epsilon for smoothing.
-  y_true_flatten = torch.type_as(y_true).type_as(torch.bool)
-  y_pred_flatten = torch.type_as(y_pred).type_as(torch.bool)
+  y_true_flatten = torch.Tensor.type_as(y_true).type_as(torch.bool)
+  y_pred_flatten = torch.Tensor.type_as(y_pred).type_as(torch.bool)
 
   if not torch.sum(y_true_flatten) + torch.sum(y_pred_flatten):
     return 1.0

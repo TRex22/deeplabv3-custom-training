@@ -76,7 +76,6 @@ def load_dataset(config, root, image_set, category_list=None, batch_size=1, samp
   # print(f'Number of data points for {image_set}: {len(dataloader)}')
   return [dataset, dataloader]
 
-
 def fetch_category_list(config):
   if config["dataset"] == "COCO16":
     return  [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 13, 14, 15, 16] # New list of categories
@@ -177,13 +176,13 @@ def save(model, opt, epoch, config, save_path):
   torch.save(checkpoint, os.path.join(save_path, f"model_{epoch}.pth"))
 
 def loss_batch(model, device, scaler, loss_func, xb, yb, opt=None):
-  input = xb.to(device)
+  input = torch.Tensor(xb).to(device)
   prediction = model(input)
 
   del input
 
   output = prediction['out']
-  target = yb.to(device)
+  target = torch.Tensor(yb).to(device)
 
   loss = loss_func(output, target, ignore_index=255)
   dice_loss = dice_coef(target, output.argmax(1))

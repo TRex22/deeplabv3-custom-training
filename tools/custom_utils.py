@@ -54,6 +54,10 @@ def save_csv(file_path, csv_data):
   with open(file_path, 'a') as f:
     f.write(f'{csv_data}\n')
 
+def collate_cityscapes(batch):
+  images, targets = list(zip(*batch))
+  return np.array(images), np.array(targets)
+
 def load_dataset(config, root, image_set, category_list=None, batch_size=1, sample=False):
   if config["dataset"] == "COCO16" or config["dataset"] == "COCO21":
     dataset = load_coco(root, image_set, category_list=category_list)
@@ -69,7 +73,7 @@ def load_dataset(config, root, image_set, category_list=None, batch_size=1, samp
     subset = torch.utils.data.Subset(dataset, subset_idex)
 
   if config["dataset"] == "cityscapes":
-    dataloader = DataLoader(subset, batch_size=batch_size, shuffle=True, drop_last=True)
+    dataloader = DataLoader(subset, batch_size=batch_size, shuffle=True, drop_last=True, collate_fn=collate_cityscapes)
   else:
     dataloader = DataLoader(subset, batch_size=batch_size, shuffle=True, drop_last=True, collate_fn=utils.collate_fn)
 
@@ -176,13 +180,13 @@ def save(model, opt, epoch, config, save_path):
   torch.save(checkpoint, os.path.join(save_path, f"model_{epoch}.pth"))
 
 def loss_batch(model, device, scaler, loss_func, xb, yb, opt=None):
-  input = torch.Tensor(xb).to(device)
+  input = xb.to(device)
   prediction = model(input)
 
   del input
 
   output = prediction['out']
-  target = torch.Tensor(yb).to(device)
+  target = yb.to(device)
 
   loss = loss_func(output, target, ignore_index=255)
   dice_loss = dice_coef(target, output.argmax(1))

@@ -28,7 +28,7 @@ print('=== Load COCO21 ===')
 train_dataset, train_dataloader = custom_utils.load_dataset(config, config['dataset_path'], 'train', category_list=None, batch_size=batch_size, sample=True)
 val_dataset, val_dataloader = custom_utils.load_dataset(config, config['dataset_path'], 'val', category_list=None, batch_size=1, sample=False)
 
-print(f'train_dataset: {len(train_dataset)}, train_dataloader: {len(train_dataloader)}')
+print(f'train_dataset: {len(train_dataset)}, train_dataloader: {len(train_dataloader)}, train_dataloader * batch_size: {len(train_dataloader) * batch_size}')
 print(f'val_dataset: {len(val_dataset)}, val_dataloader: {len(val_dataloader)}')
 
 print('Sample 10%')
@@ -42,7 +42,7 @@ config = {
 train_dataset, train_dataloader = custom_utils.load_dataset(config, config['dataset_path'], 'train', category_list=None, batch_size=batch_size, sample=True)
 val_dataset, val_dataloader = custom_utils.load_dataset(config, config['dataset_path'], 'val', category_list=None, batch_size=1, sample=False)
 
-print(f'train_dataset: {len(train_dataset)}, train_dataloader: {len(train_dataloader)}')
+print(f'train_dataset: {len(train_dataset)}, train_dataloader: {len(train_dataloader)}, train_dataloader * batch_size: {len(train_dataloader) * batch_size}')
 print(f'val_dataset: {len(val_dataset)}, val_dataloader: {len(val_dataloader)}')
 
 print('=== Load COCO16 ===')
@@ -56,7 +56,7 @@ config = {
 train_dataset, train_dataloader = custom_utils.load_dataset(config, config['dataset_path'], 'train', category_list=None, batch_size=batch_size, sample=True)
 val_dataset, val_dataloader = custom_utils.load_dataset(config, config['dataset_path'], 'val', category_list=None, batch_size=1, sample=False)
 
-print(f'train_dataset: {len(train_dataset)}, train_dataloader: {len(train_dataloader)}')
+print(f'train_dataset: {len(train_dataset)}, train_dataloader: {len(train_dataloader)}, train_dataloader * batch_size: {len(train_dataloader) * batch_size}')
 print(f'val_dataset: {len(val_dataset)}, val_dataloader: {len(val_dataloader)}')
 
 print('Sample 10%')
@@ -70,7 +70,7 @@ config = {
 train_dataset, train_dataloader = custom_utils.load_dataset(config, config['dataset_path'], 'train', category_list=None, batch_size=batch_size, sample=True)
 val_dataset, val_dataloader = custom_utils.load_dataset(config, config['dataset_path'], 'val', category_list=None, batch_size=1, sample=False)
 
-print(f'train_dataset: {len(train_dataset)}, train_dataloader: {len(train_dataloader)}')
+print(f'train_dataset: {len(train_dataset)}, train_dataloader: {len(train_dataloader)}, train_dataloader * batch_size: {len(train_dataloader) * batch_size}')
 print(f'val_dataset: {len(val_dataset)}, val_dataloader: {len(val_dataloader)}')
 
 print('=== Load cityscapes ===')
@@ -84,7 +84,7 @@ config = {
 train_dataset, train_dataloader = custom_utils.load_dataset(config, config['dataset_path'], 'train', category_list=None, batch_size=batch_size, sample=True)
 val_dataset, val_dataloader = custom_utils.load_dataset(config, config['dataset_path'], 'val', category_list=None, batch_size=1, sample=False)
 
-print(f'train_dataset: {len(train_dataset)}, train_dataloader: {len(train_dataloader)}')
+print(f'train_dataset: {len(train_dataset)}, train_dataloader: {len(train_dataloader)}, train_dataloader * batch_size: {len(train_dataloader) * batch_size}')
 print(f'val_dataset: {len(val_dataset)}, val_dataloader: {len(val_dataloader)}')
 
 print('Sample 10%')
@@ -98,7 +98,7 @@ config = {
 train_dataset, train_dataloader = custom_utils.load_dataset(config, config['dataset_path'], 'train', category_list=None, batch_size=batch_size, sample=True)
 val_dataset, val_dataloader = custom_utils.load_dataset(config, config['dataset_path'], 'val', category_list=None, batch_size=1, sample=False)
 
-print(f'train_dataset: {len(train_dataset)}, train_dataloader: {len(train_dataloader)}')
+print(f'train_dataset: {len(train_dataset)}, train_dataloader: {len(train_dataloader)}, train_dataloader * batch_size: {len(train_dataloader) * batch_size}')
 print(f'val_dataset: {len(val_dataset)}, val_dataloader: {len(val_dataloader)}')
 
 print('=== DataSet Calls ==')

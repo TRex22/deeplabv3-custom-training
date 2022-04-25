@@ -17,14 +17,16 @@ import transforms as T
 
 print("Sanity Check Data ...")
 
+batch_size = 16
+coco_dataset_path = "/mnt/scratch_disk/data/coco/data_raw/"
+cityscapes_path = "/data/data/cityscapes/data_raw/"
+
 config = {
   "dataset": "COCO21",
-  "dataset_path": "/mnt/scratch_disk/data/coco/data_raw/",
+  "dataset_path": coco_dataset_path,
   "val_batch_size": 1,
   "sample_percentage": 1.0
 }
-
-batch_size = 16
 
 print('=== Load COCO21 ===')
 train_dataset, train_dataloader = custom_utils.load_dataset(config, config['dataset_path'], 'train', category_list=None, batch_size=batch_size, sample=True)
@@ -36,7 +38,7 @@ print(f'val_dataset: {len(val_dataset)}, val_dataloader: {len(val_dataloader)}')
 print('Sample 10%')
 config = {
   "dataset": "COCO21",
-  "dataset_path": "/mnt/scratch_disk/data/coco/data_raw/",
+  "dataset_path": coco_dataset_path,
   "val_batch_size": 1,
   "sample_percentage": 0.1
 }
@@ -50,7 +52,7 @@ print(f'val_dataset: {len(val_dataset)}, val_dataloader: {len(val_dataloader)}')
 print('=== Load COCO16 ===')
 config = {
   "dataset": "COCO16",
-  "dataset_path": "/mnt/scratch_disk/data/coco/data_raw/",
+  "dataset_path": coco_dataset_path,
   "val_batch_size": 1,
   "sample_percentage": 1.0
 }
@@ -64,7 +66,7 @@ print(f'val_dataset: {len(val_dataset)}, val_dataloader: {len(val_dataloader)}')
 print('Sample 10%')
 config = {
   "dataset": "COCO16",
-  "dataset_path": "/mnt/scratch_disk/data/coco/data_raw/",
+  "dataset_path": coco_dataset_path,
   "val_batch_size": 1,
   "sample_percentage": 0.1
 }
@@ -78,7 +80,7 @@ print(f'val_dataset: {len(val_dataset)}, val_dataloader: {len(val_dataloader)}')
 print('=== Load cityscapes ===')
 config = {
   "dataset": "cityscapes",
-  "dataset_path": "/data/data/cityscapes/data_raw/",
+  "dataset_path": cityscapes_path,
   "val_batch_size": 1,
   "sample_percentage": 1.0
 }
@@ -92,7 +94,7 @@ print(f'val_dataset: {len(val_dataset)}, val_dataloader: {len(val_dataloader)}')
 print('Sample 10%')
 config = {
   "dataset": "cityscapes",
-  "dataset_path": "/data/data/cityscapes/data_raw/",
+  "dataset_path": cityscapes_path,
   "val_batch_size": 1,
   "sample_percentage": 0.1
 }
@@ -104,11 +106,11 @@ print(f'train_dataset: {len(train_dataset)}, train_dataloader: {len(train_datalo
 print(f'val_dataset: {len(val_dataset)}, val_dataloader: {len(val_dataloader)}')
 
 print('=== DataSet Calls ==')
-coco_dataset_train = get_coco("/mnt/scratch_disk/data/coco/data_raw/", 'train', presets.SegmentationPresetTrain(base_size=520, crop_size=480), category_list=None)
-coco_dataset_val = get_coco("/mnt/scratch_disk/data/coco/data_raw/", 'val', presets.SegmentationPresetEval(base_size=520), category_list=None)
+coco_dataset_train = get_coco(coco_dataset_path, 'train', presets.SegmentationPresetTrain(base_size=520, crop_size=480), category_list=None)
+coco_dataset_val = get_coco(coco_dataset_path, 'val', presets.SegmentationPresetEval(base_size=520), category_list=None)
 
-cityscapes_dataset_train = torchvision.datasets.Cityscapes("/data/data/cityscapes/data_raw/", split='train', mode='fine', target_type='semantic', transforms=custom_utils.cityscapes_transforms())
-cityscapes_dataset_val = torchvision.datasets.Cityscapes("/data/data/cityscapes/data_raw/", split='val', mode='fine', target_type='semantic', transforms=custom_utils.cityscapes_transforms())
+cityscapes_dataset_train = torchvision.datasets.Cityscapes(cityscapes_path, split='train', mode='fine', target_type='semantic', transforms=custom_utils.cityscapes_transforms())
+cityscapes_dataset_val = torchvision.datasets.Cityscapes(cityscapes_path, split='val', mode='fine', target_type='semantic', transforms=custom_utils.cityscapes_transforms())
 
 print(f'coco_dataset_train: {len(coco_dataset_train)}')
 print(f'coco_dataset_val: {len(coco_dataset_val)}')

@@ -73,6 +73,9 @@ def cityscapes_transforms():
 def cityscapes_collate(batch):
   images, targets = list(zip(*batch))
 
+  images = torch.as_tensor(np.array(images))
+  targets = torch.as_tensor(np.array(targets))
+
   # torch.as_tensor(np.array(target), dtype=torch.int32)
   return torch.from_numpy(np.array([images, targets]))
 

@@ -10,6 +10,7 @@ import custom_utils
 import sys
 sys.path.insert(1, '../references/segmentation/')
 
+import presets
 from coco_utils import get_coco
 import transforms as T
 
@@ -102,14 +103,14 @@ print(f'train_dataset: {len(train_dataset)}, train_dataloader: {len(train_datalo
 print(f'val_dataset: {len(val_dataset)}, val_dataloader: {len(val_dataloader)}')
 
 print('=== DataSet Calls ==')
-coco_dataset_train = load_coco("/mnt/scratch_disk/data/coco/data_raw/", 'train', category_list=None)
-coco_dataset_test = load_coco("/mnt/scratch_disk/data/coco/data_raw/", 'test', category_list=None)
+coco_dataset_train = get_coco("/mnt/scratch_disk/data/coco/data_raw/", 'train', presets.SegmentationPresetTrain(base_size=520, crop_size=480), category_list=None)
+coco_dataset_val = get_coco("/mnt/scratch_disk/data/coco/data_raw/", 'val', presets.SegmentationPresetEval(base_size=520), category_list=None)
 
-cityscapes_dataset_train = torchvision.datasets.Cityscapes("/data/data/cityscapes/data_raw/", split='train', mode='fine', target_type='semantic', transforms=custom_utils.cityscapes_transforms()) # TODO: Cityscapes 'test'
-cityscapes_dataset_test = torchvision.datasets.Cityscapes("/data/data/cityscapes/data_raw/", split='test', mode='fine', target_type='semantic', transforms=custom_utils.cityscapes_transforms()) # TODO: Cityscapes 'test'
+cityscapes_dataset_train = torchvision.datasets.Cityscapes("/data/data/cityscapes/data_raw/", split='train', mode='fine', target_type='semantic', transforms=custom_utils.cityscapes_transforms())
+cityscapes_dataset_val = torchvision.datasets.Cityscapes("/data/data/cityscapes/data_raw/", split='val', mode='fine', target_type='semantic', transforms=custom_utils.cityscapes_transforms())
 
 print(f'coco_dataset_train: {len(coco_dataset_train)}')
-print(f'coco_dataset_test: {len(coco_dataset_test)}')
+print(f'coco_dataset_val: {len(coco_dataset_val)}')
 print(f'cityscapes_dataset_train: {len(cityscapes_dataset_train)}')
-print(f'cityscapes_dataset_test: {len(cityscapes_dataset_test)}')
+print(f'cityscapes_dataset_val: {len(cityscapes_dataset_val)}')
 

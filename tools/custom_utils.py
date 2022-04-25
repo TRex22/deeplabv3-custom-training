@@ -48,7 +48,9 @@ def open_config(path):
     config = checkpoint['args']
     epoch = checkpoint['epoch'] + 1
 
+  config["save_path"] = f'{config["save_path"]}/{config["dataset"]}'
   create_folder(config["save_path"])
+
   return [config, epoch]
 
 def save_csv(file_path, csv_data):

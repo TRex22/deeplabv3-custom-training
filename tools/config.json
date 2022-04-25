@@ -5,7 +5,7 @@
   "val_batch_size": 1, // 8 // Val is not cropped // 1 seems to be the fastest
   "outer_batch_size_multiplier": 10, //15, // Used to pre-load data
   "epochs": 10,
-  "sample_percentage": 0.1, //0.25 // 0.1 // 1.0
+  "sample_percentage": 1.0, //0.25 // 0.1 // 1.0
   "lr": 0.02,
   "momentum": 0.8,
   "beta_1": 0.9,

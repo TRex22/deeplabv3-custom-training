@@ -54,23 +54,30 @@ def save_csv(file_path, csv_data):
   with open(file_path, 'a') as f:
     f.write(f'{csv_data}\n')
 
+def cityscapes_transforms():
+  mean = (0.485, 0.456, 0.406) # Taken from COCO reference
+  std = (0.229, 0.224, 0.225)
+
+  transforms_arr = transforms.Compose(
+    [
+      transforms.RandomCrop(520, 520),
+      transforms.PILToTensor(),
+      transforms.ConvertImageDtype(torch.float16),
+      transforms.Normalize(mean=mean, std=std),
+    ]
+  )
+
+  return transforms_arr
+
+def cityscapes_collate(batch):
+  images, targets = list(zip(*batch))
+  return images, targets
+
 def load_dataset(config, root, image_set, category_list=None, batch_size=1, sample=False):
   if config["dataset"] == "COCO16" or config["dataset"] == "COCO21":
     dataset = load_coco(root, image_set, category_list=category_list)
   elif config["dataset"] == "cityscapes":
-    mean = (0.485, 0.456, 0.406) # Taken from COCO reference
-    std = (0.229, 0.224, 0.225)
-
-    transforms_arr = transforms.Compose(
-      [
-        transforms.RandomCrop(520, 520),
-        transforms.PILToTensor(),
-        transforms.ConvertImageDtype(torch.float16),
-        transforms.Normalize(mean=mean, std=std),
-      ]
-    )
-
-    dataset = torchvision.datasets.Cityscapes(root, split=image_set, mode='fine', target_type='semantic', transforms=transforms_arr) # TODO: Cityscapes 'test'
+    dataset = torchvision.datasets.Cityscapes(root, split=image_set, mode='fine', target_type='semantic', transforms=cityscapes_transforms()) # TODO: Cityscapes 'test'
 
   sample_size = len(dataset) * config["sample_percentage"]
   if sample_size < batch_size:
@@ -81,7 +88,7 @@ def load_dataset(config, root, image_set, category_list=None, batch_size=1, samp
     subset = torch.utils.data.Subset(dataset, subset_idex)
 
   if config["dataset"] == "cityscapes":
-    dataloader = DataLoader(subset, batch_size=batch_size, shuffle=True, drop_last=True)
+    dataloader = DataLoader(subset, batch_size=batch_size, shuffle=True, drop_last=True, collate_fn=cityscapes_collate)
   else:
     dataloader = DataLoader(subset, batch_size=batch_size, shuffle=True, drop_last=True, collate_fn=utils.collate_fn)
 

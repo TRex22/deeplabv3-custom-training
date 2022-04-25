@@ -256,7 +256,7 @@ def train(model, device, loss_func, opt, epoch, config, outer_batch_size):
 
   return [model, opt]
 
-def validate(model, device, loss_func, epoch, config, category_list=None):
+def validate(model, device, loss_func, epoch, config, category_list=None, save=True):
   # Load Data - in val step to save memory
   val_dataset = load_coco(config['coco_path'], 'val', category_list=category_list)
   val_dataloader = DataLoader(val_dataset, batch_size=config["val_batch_size"], shuffle=False, drop_last=True, collate_fn=utils.collate_fn)
@@ -270,7 +270,7 @@ def validate(model, device, loss_func, epoch, config, category_list=None):
   pbar = tqdm.tqdm(total=len(val_dataloader))
 
   with torch.no_grad():
-    final_loss, final_iou, _opt = run_loop(model, device, val_dataloader, config["val_batch_size"], scaler, loss_func, epoch, config, opt=None)
+    final_loss, final_iou, _opt = run_loop(model, device, val_dataloader, config["val_batch_size"], scaler, loss_func, epoch, config, opt=None, save=save)
 
   del val_dataloader
   del val_dataset

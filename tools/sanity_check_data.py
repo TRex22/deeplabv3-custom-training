@@ -2,6 +2,7 @@ import sys
 import tqdm
 
 import torch
+import torchvision
 from torch import nn
 from torchvision import models
 

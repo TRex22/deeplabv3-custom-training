@@ -10,7 +10,6 @@ from torch import optim
 from torch import nn
 import torchvision
 from torch.utils.data import DataLoader
-import transforms as T
 
 import tqdm
 
@@ -73,15 +72,15 @@ def load_dataset(config, root, image_set, category_list=None, batch_size=1, samp
     mean = (0.485, 0.456, 0.406)
     std = (0.229, 0.224, 0.225)
 
-    transforms = T.Compose(
+    transforms_arr = transforms.Compose(
       [
-        T.RandomResize(520, 520),
-        T.PILToTensor(),
-        T.ConvertImageDtype(torch.float16),
-        T.Normalize(mean=mean, std=std),
+        transforms.RandomResize(520, 520),
+        transforms.PILToTensor(),
+        transforms.ConvertImageDtype(torch.float16),
+        transforms.Normalize(mean=mean, std=std),
       ]
     )
-    dataloader = DataLoader(subset, batch_size=batch_size, shuffle=True, drop_last=True, transforms=transforms)
+    dataloader = DataLoader(subset, batch_size=batch_size, shuffle=True, drop_last=True, transforms=transforms_arr)
   else:
     dataloader = DataLoader(subset, batch_size=batch_size, shuffle=True, drop_last=True, collate_fn=utils.collate_fn)
 

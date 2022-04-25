@@ -10,7 +10,8 @@ import custom_utils
 config = {
   "dataset": "COCO21",
   "dataset_path": "/mnt/scratch_disk/data/coco/data_raw/",
-  "val_batch_size": 1
+  "val_batch_size": 1,
+  "sample_percentage": 1.0
 }
 
 print('Test pretrained models ...')

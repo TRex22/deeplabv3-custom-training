@@ -24,6 +24,7 @@ sys.path.insert(1, '../references/segmentation/')
 import presets
 import utils
 from coco_utils import get_coco
+import transforms as T
 
 ################################################################################
 # Helper Methids                                                               #
@@ -58,12 +59,12 @@ def cityscapes_transforms():
   mean = (0.485, 0.456, 0.406) # Taken from COCO reference
   std = (0.229, 0.224, 0.225)
 
-  transforms_arr = transforms.Compose(
+  transforms_arr = T.Compose(
     [
-      transforms.RandomCrop(520),
-      transforms.PILToTensor(),
-      transforms.ConvertImageDtype(torch.float16),
-      transforms.Normalize(mean=mean, std=std),
+      T.RandomCrop(520, 520),
+      T.PILToTensor(),
+      T.ConvertImageDtype(torch.float16),
+      T.Normalize(mean=mean, std=std),
     ]
   )
 

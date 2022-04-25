@@ -72,7 +72,7 @@ def cityscapes_transforms():
 
 def cityscapes_collate(batch):
   images, targets = list(zip(*batch))
-  return np.array([images, targets])
+  return images, targets
 
 def load_dataset(config, root, image_set, category_list=None, batch_size=1, sample=False):
   if config["dataset"] == "COCO16" or config["dataset"] == "COCO21":

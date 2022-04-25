@@ -14,6 +14,7 @@ config = {
 
 print('Test pretrained models ...')
 
+category_list = [0, 5, 2, 16, 9, 44, 6, 3, 17, 62, 21, 67, 18, 19, 4, 1, 64, 20, 63, 7, 72] # Default list
 dev, _summary_dev = custom_utils.fetch_device()
 loss_func = nn.functional.cross_entropy # TODO: Add in weight
 
@@ -21,10 +22,10 @@ loss_func = nn.functional.cross_entropy # TODO: Add in weight
 print('Validating deeplabv3_resnet50 ...')
 model = models.segmentation.deeplabv3_resnet50(pretrained=True, num_classes=21)
 model.to(dev)
-custom_utils.validate(model, dev, loss_func, -1, config)
+custom_utils.validate(model, dev, loss_func, -1, config, category_list=category_list)
 
 # ResNet101
 print('Validating deeplabv3_resnet101 ...')
 model = models.segmentation.deeplabv3_resnet101(pretrained=True, num_classes=21)
 model.to(dev)
-custom_utils.validate(model, dev, loss_func, -1, config)
+custom_utils.validate(model, dev, loss_func, -1, config, category_list=category_list)

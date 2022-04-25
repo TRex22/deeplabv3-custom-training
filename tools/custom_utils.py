@@ -63,10 +63,13 @@ def save_csv(file_path, csv_data):
 # train_dataset = torchvision.datasets.CocoDetection(train_image_path, train_annotation_path)
 # val_dataset = torchvision.datasets.CocoDetection(val_image_path, val_annotation_path)
 # val_dataloader = DataLoader(val_dataset, batch_size=1, shuffle=False, num_workers=2, drop_last=False, persistent_workers=False)
-def load_coco(root, image_set):
+def load_coco(root, image_set, category_list=None):
   # Using reference code
   # See Readme.md for new category list
-  category_list = [0, 5, 2, 16, 9, 44, 6, 3, 17, 62, 21, 67, 18, 19, 4, 1, 64, 20, 63, 7, 72]
+
+  if category_list is None:
+    category_list = [0, 5, 2, 16, 9, 44, 6, 3, 17, 62, 21, 67, 18, 19, 4, 1, 64, 20, 63, 7, 72] # Default
+    # CAT_LIST = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21] # New
 
   if image_set == 'train':
     transforms = presets.SegmentationPresetTrain(base_size=520, crop_size=480)
@@ -253,9 +256,9 @@ def train(model, device, loss_func, opt, epoch, config, outer_batch_size):
 
   return [model, opt]
 
-def validate(model, device, loss_func, epoch, config):
+def validate(model, device, loss_func, epoch, config, category_list=None):
   # Load Data - in val step to save memory
-  val_dataset = load_coco(config['coco_path'], 'val')
+  val_dataset = load_coco(config['coco_path'], 'val', category_list=category_list)
   val_dataloader = DataLoader(val_dataset, batch_size=config["val_batch_size"], shuffle=False, drop_last=True, collate_fn=utils.collate_fn)
 
   model = model.eval()

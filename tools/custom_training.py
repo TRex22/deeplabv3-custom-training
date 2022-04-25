@@ -277,15 +277,14 @@ def compute_iou(output, target):
 # https://towardsdatascience.com/choosing-and-customizing-loss-functions-for-image-processing-a0e4bf665b0a
 # https://stackoverflow.com/questions/47084179/how-to-calculate-multi-class-dice-coefficient-for-multiclass-image-segmentation
 def dice_coef(y_true, y_pred, epsilon=1e-6):
-"""Altered Sorensen–Dice coefficient with epsilon for smoothing."""
-    y_true_flatten = np.asarray(y_true).astype(np.bool)
-    y_pred_flatten = np.asarray(y_pred).astype(np.bool)
+  # Altered Sorensen–Dice coefficient with epsilon for smoothing.
+  y_true_flatten = np.asarray(y_true).astype(np.bool)
+  y_pred_flatten = np.asarray(y_pred).astype(np.bool)
 
-    if not np.sum(y_true_flatten) + np.sum(y_pred_flatten):
-        return 1.0
+  if not np.sum(y_true_flatten) + np.sum(y_pred_flatten):
+    return 1.0
 
-    return (2. * np.sum(y_true_flatten * y_pred_flatten)) /\
-           (np.sum(y_true_flatten) + np.sum(y_pred_flatten) + epsilon)
+  return (2. * np.sum(y_true_flatten * y_pred_flatten)) / (np.sum(y_true_flatten) + np.sum(y_pred_flatten) + epsilon)
 
 ################################################################################
 # Main Thread                                                                  #

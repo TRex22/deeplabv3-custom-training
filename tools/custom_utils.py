@@ -69,6 +69,7 @@ def load_dataset(config, root, image_set, category_list=None, batch_size=, sampl
   else:
     dataloader = DataLoader(subset, batch_size=batch_size, shuffle=True, drop_last=True, collate_fn=utils.collate_fn)
 
+  print(f'Number of data points for {image_set}: {len(dataloader)}')
   return [dataset, dataloader]
 
 

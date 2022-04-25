@@ -65,7 +65,7 @@ def cityscapes_transforms():
     [
       T.RandomCrop(520),
       T.PILToTensor(),
-      T.ConvertImageDtype(torch.float16),
+      T.ConvertImageDtype(torch.float),
       T.Normalize(mean=mean, std=std),
     ]
   )

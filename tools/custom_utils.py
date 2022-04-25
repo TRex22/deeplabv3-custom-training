@@ -205,10 +205,10 @@ def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, co
   pbar = tqdm.tqdm(total=len(dataloader))
 
   # TODO: Allow disabling sub-batches
-  if opt is None:
+  if opt is None: # Validation
     # Dont use sub-batches
     for xb, yb in tqdm.tqdm(dataloader):
-      loss, dice_loss, iou_score, opt = loss_batch(model, device, scaler, loss_func, xb, yb, opt=opt)
+      loss, dice_loss, iou_score, _opt = loss_batch(model, device, scaler, loss_func, xb, yb)
 
       sum_of_loss += loss
       sum_of_iou += iou_score
@@ -217,7 +217,15 @@ def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, co
     final_loss = sum_of_loss / len(dataloader)
     final_iou = sum_of_iou / len(dataloader)
     final_dice = sum_of_dice / len(dataloader)
-  else: # Use sub-batches
+
+    pbar.write(f'Epoch {epoch} val loss: {final_loss} val IoU: {final_iou} val dice: {final_dice}')
+
+    if save:
+      val_csv_path = f'{config["save_path"]}/val_loss.csv'
+      save_csv(val_csv_path, f'{final_loss},{final_iou},{final_dice}')
+
+    pbar.update(1)
+  else: # Use sub-batches / Training
     for inner_batch in dataloader:
       for i in range(0, inner_batch[0].shape[0], batch_size):
         xb = inner_batch[0][i:i+batch_size]
@@ -229,25 +237,18 @@ def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, co
         sum_of_iou += iou_score
         sum_of_dice += dice_loss
 
-      final_loss = sum_of_loss / (len(dataloader) * batch_size)
-      final_iou = sum_of_iou / (len(dataloader) * batch_size)
-      final_dice = sum_of_dice / (len(dataloader) * batch_size)
+    final_loss = sum_of_loss / (len(dataloader) * batch_size)
+    final_iou = sum_of_iou / (len(dataloader) * batch_size)
+    final_dice = sum_of_dice / (len(dataloader) * batch_size)
 
-      pbar.update(1)
-
-  if opt is not None:
     pbar.write(f'Epoch {epoch} train loss: {final_loss} train IoU: {final_iou} train dice: {final_dice}')
 
     train_csv_path = f'{config["save_path"]}/train_loss.csv'
 
     if save:
       save_csv(train_csv_path, f'{final_loss},{final_iou},{final_dice}')
-  else:
-    pbar.write(f'Epoch {epoch} val loss: {final_loss} val IoU: {final_iou} val dice: {final_dice}')
 
-    if save:
-      val_csv_path = f'{config["save_path"]}/val_loss.csv'
-      save_csv(val_csv_path, f'{final_loss},{final_iou},{final_dice}')
+    pbar.update(1)
 
   return [final_loss, final_iou, opt]
 

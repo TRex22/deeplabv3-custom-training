@@ -79,7 +79,7 @@ def load_coco(root, image_set):
   if image_set == 'train':
     transforms = presets.SegmentationPresetTrain(base_size=520, crop_size=480)
   else:
-    transforms = presets.SegmentationPresetEval(base_size=520, crop_size=480) # crop size added
+    transforms = presets.SegmentationPresetEval(base_size=520)
 
   return get_coco(root, image_set, transforms, category_list=category_list)
 

@@ -59,8 +59,8 @@ def collate_cityscapes(batch):
   targets = []
 
   for i in range(len(batch)):
-    images.append(transforms.ToTensor()(images[i]))
-    targets.append(transforms.ToTensor()(targets[i]))
+    images.append(transforms.ToTensor()(batch[i][0]))
+    targets.append(transforms.ToTensor()(batch[i][1]))
 
   return np.array(images), np.array(targets)
 

@@ -20,9 +20,11 @@ loss_func = nn.functional.cross_entropy # TODO: Add in weight
 # ResNet50
 print('Validating deeplabv3_resnet50 ...')
 model = models.segmentation.deeplabv3_resnet50(pretrained=True, num_classes=21)
+model.to(dev)
 custom_utils.validate(model, dev, loss_func, -1, config)
 
 # ResNet101
 print('Validating deeplabv3_resnet101 ...')
 model = models.segmentation.deeplabv3_resnet101(pretrained=True, num_classes=21)
+model.to(dev)
 custom_utils.validate(model, dev, loss_func, -1, config)

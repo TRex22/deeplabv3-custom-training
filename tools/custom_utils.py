@@ -180,7 +180,7 @@ def loss_batch(model, device, scaler, loss_func, xb, yb, opt=None):
 
   return [loss.cpu().item(), dice_loss, iou_score, opt]
 
-def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, config, opt=None):
+def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, config, opt=None, save=True):
   sum_of_loss = 0.0
   sum_of_iou = 0.0
   sum_of_dice = 0.0
@@ -222,12 +222,16 @@ def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, co
     pbar.write(f'Epoch {epoch} train loss: {final_loss} train IoU: {final_iou} train dice: {final_dice}')
 
     train_csv_path = f'{config["save_path"]}/train_loss.csv'
-    save_csv(train_csv_path, f'{final_loss},{final_iou},{final_dice}')
+
+    if save:
+      save_csv(train_csv_path, f'{final_loss},{final_iou},{final_dice}')
   else:
     pbar.write(f'Epoch {epoch} val loss: {final_loss} val IoU: {final_iou} val dice: {final_dice}')
 
     val_csv_path = f'{config["save_path"]}/val_loss.csv'
-    save_csv(val_csv_path, f'{final_loss},{final_iou},{final_dice}')
+
+    if save:
+      save_csv(val_csv_path, f'{final_loss},{final_iou},{final_dice}')
 
   return [final_loss, final_iou, opt]
 

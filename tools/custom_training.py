@@ -25,7 +25,7 @@ if len(sys.argv) == 3: # params: model config
 elif len(sys.argv) == 2: # params: either model or config
   config_path= sys.argv[1]
 else:
-  raise RuntimeError.new("Invalid Parameters, please add either the model path, config path or both")
+  raise RuntimeError("Invalid Parameters, please add either the model path, config path or both")
 
 print(f'Config/Model path: {config_path}')
 config, start_epoch = custom_utils.open_config(config_path)

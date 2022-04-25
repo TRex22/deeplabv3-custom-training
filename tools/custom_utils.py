@@ -55,8 +55,14 @@ def save_csv(file_path, csv_data):
     f.write(f'{csv_data}\n')
 
 def collate_cityscapes(batch):
-  images, targets = list(zip(*batch))
-  return torch.Tensor(np.array(images)), torch.Tensor(np.array(targets))
+  images = []
+  targets = []
+
+  for i in range(len(batch)):
+    images[i] = transforms.ToTensor()(images[i])
+    targets[i] = transforms.ToTensor()(targets[i])
+
+  return np.array(images), np.array(targets)
 
 def load_dataset(config, root, image_set, category_list=None, batch_size=1, sample=False):
   if config["dataset"] == "COCO16" or config["dataset"] == "COCO21":

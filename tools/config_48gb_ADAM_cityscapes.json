@@ -1,0 +1,20 @@
+{
+  "selected_model": "deeplabv3_resnet101", // "deeplabv3_resnet101"
+  "dataset": "cityscapes", // "COCO16", "COCO21", "cityscapes
+  "batch_size": 48,
+  "val_batch_size": 1, // 8 // Val is not cropped
+  "outer_batch_size_multiplier": 10, //15, // Used to pre-load data
+  "epochs": 30,
+  "sample_percentage": 1.0, //0.25 // 0.1 // 1.0
+  "lr": 0.02,
+  "momentum": 0.8,
+  "beta_1": 0.9,
+  "beta_2": 0.999,
+  "epsilon": 1e-08,
+  "weight_decay": 0,
+  "amsgrad": false,
+  "load_model": false,
+  "opt_function": "ADAM", // "ADAM",
+  "save_path": "/home-mscluster/jchalom/trained_models/deeplabv3_resnet101/adam/",
+  "dataset_path": "/home-mscluster/jchalom/data/cityscapes/data_raw/"
+}

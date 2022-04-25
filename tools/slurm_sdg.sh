@@ -6,4 +6,4 @@
 #SBATCH --nodes=1 
 #SBATCH --partition=biggpu
 
-python custom_tarining.py /home-mscluster/jchalom/deeplabv3-custom-training/tools/config_48gb_SGD.json
+python custom_training.py /home-mscluster/jchalom/deeplabv3-custom-training/tools/config_48gb_SGD.json

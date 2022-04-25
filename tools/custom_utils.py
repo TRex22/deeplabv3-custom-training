@@ -77,7 +77,7 @@ def cityscapes_collate(batch):
   targets = np.array([(t.numpy()) for t in targets])
 
   # torch.as_tensor(np.array(target), dtype=torch.int32)
-  return images, targets
+  return torch.from_numpy(images), torch.from_numpy(targets)
 
 def load_dataset(config, root, image_set, category_list=None, batch_size=1, sample=False):
   if config["dataset"] == "COCO16" or config["dataset"] == "COCO21":

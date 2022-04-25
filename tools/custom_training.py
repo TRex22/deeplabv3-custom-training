@@ -20,7 +20,7 @@ import custom_utils
 
 print('Custom train deeplabv3 ...')
 
-category_list = custom_utils.fetch_category_list()
+category_list = custom_utils.fetch_category_list(config)
 
 if len(sys.argv) == 3: # params: model config
   config_path = sys.argv[2]

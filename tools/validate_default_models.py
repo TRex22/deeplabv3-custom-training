@@ -8,13 +8,14 @@ from torchvision import models
 import custom_utils
 
 config = {
+  "dataset": "COCO16",
   "coco_path": "/mnt/scratch_disk/data/coco/data_raw/",
   "val_batch_size": 1
 }
 
 print('Test pretrained models ...')
 
-category_list = [0, 5, 2, 16, 9, 44, 6, 3, 17, 62, 21, 67, 18, 19, 4, 1, 64, 20, 63, 7, 72] # Default list
+category_list = custom_utils.fetch_category_list(config)
 dev, _summary_dev = custom_utils.fetch_device()
 loss_func = nn.functional.cross_entropy # TODO: Add in weight
 

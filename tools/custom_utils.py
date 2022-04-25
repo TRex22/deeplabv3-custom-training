@@ -231,7 +231,7 @@ def run_loop(model, device, dataloader, batch_size, scaler, loss_func, opt=None)
 
   return [final_loss, final_iou, opt]
 
-def train(model, device, loss_func, opt, epoch, outer_batch_size):
+def train(model, device, loss_func, opt, epoch, config, outer_batch_size):
   # Load Data - in train step to save memory
   train_dataset = load_coco(config['coco_path'], 'train')
   subset_idex = list(range(int(len(train_dataset) * config["sample_percentage"]))) # TODO: Unload others
@@ -249,7 +249,7 @@ def train(model, device, loss_func, opt, epoch, outer_batch_size):
 
   return [model, opt]
 
-def validate(model, device, loss_func, epoch):
+def validate(model, device, loss_func, epoch, config):
   # Load Data - in val step to save memory
   val_dataset = load_coco(config['coco_path'], 'val')
   val_dataloader = DataLoader(val_dataset, batch_size=config["val_batch_size"], shuffle=False, drop_last=True, collate_fn=utils.collate_fn)

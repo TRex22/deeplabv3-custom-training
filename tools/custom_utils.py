@@ -237,9 +237,9 @@ def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, co
 
   return [final_loss, final_iou, opt]
 
-def train(model, device, loss_func, opt, epoch, config, outer_batch_size):
+def train(model, device, loss_func, opt, epoch, config, outer_batch_size, category_list=category_list):
   # Load Data - in train step to save memory
-  train_dataset = load_coco(config['coco_path'], 'train')
+  train_dataset = load_coco(config['coco_path'], 'train', category_list=category_list)
   subset_idex = list(range(int(len(train_dataset) * config["sample_percentage"]))) # TODO: Unload others
   train_subset = torch.utils.data.Subset(train_dataset, subset_idex)
   train_dataloader = DataLoader(train_subset, batch_size=outer_batch_size, shuffle=True, drop_last=True, collate_fn=utils.collate_fn)

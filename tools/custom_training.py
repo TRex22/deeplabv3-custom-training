@@ -61,7 +61,7 @@ if __name__ == '__main__':
   pbar = tqdm.tqdm(total=config["epochs"])
   for epoch in range(start_epoch, config["epochs"], 1):
     pbar.write('Training Phase:')
-    model, opt = custom_utils.train(model, dev, loss_func, opt, epoch, config, outer_batch_size)
+    model, opt = custom_utils.train(model, dev, loss_func, opt, epoch, config, outer_batch_size, category_list=category_list)
 
     pbar.write('Validation Phase:')
     # If you need to purge memory

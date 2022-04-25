@@ -183,7 +183,7 @@ def load(model, opt, path):
   print(f'Loading model from: {path}')
   checkpoint = torch.load(path)
   model.load_state_dict(checkpoint['model'], strict=False)
-  opt.load_state_dict(checkpoint['optimizer'], strict=False)
+  opt.load_state_dict(checkpoint['optimizer'])
   model.to(dev)
 
   print(f'Model loaded into {summary_dev}!')

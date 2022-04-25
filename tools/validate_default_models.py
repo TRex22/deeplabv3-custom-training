@@ -9,7 +9,7 @@ import custom_utils
 
 config = {
   "coco_path": "/mnt/scratch_disk/data/coco/data_raw/",
-  "val_batch_size": 8
+  "val_batch_size": 1
 }
 
 print('Test pretrained models ...')

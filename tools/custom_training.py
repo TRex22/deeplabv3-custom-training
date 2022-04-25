@@ -51,7 +51,7 @@ if __name__ == '__main__':
   model, opt = custom_utils.initialise_model(dev, config, num_classes=len(category_list))
 
   if config["load_model"]:
-    model = custom_utils.load(model, opt, model_path) # Load model
+    model = custom_utils.load(model, opt, dev, model_path) # Load model
 
   # Based on reference code
   loss_func = nn.functional.cross_entropy # TODO: Add in weight

@@ -22,7 +22,7 @@ device, summary_dev = custom_utils.fetch_device()
 category_list = custom_utils.fetch_category_list(config)
 model, opt = custom_utils.initialise_model(device, config, num_classes=len(category_list))
 
-model = custom_utils.load(model, opt, model_path) # Load model
+model = custom_utils.load(model, opt, device, model_path) # Load model
 model = model.eval()
 
 image = Image.open(input_image_path)

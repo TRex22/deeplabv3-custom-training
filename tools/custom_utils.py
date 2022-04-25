@@ -175,7 +175,7 @@ def initialise_model(dev, config, pretrained=False, num_classes=21):
 
   return [model, opt]
 
-def load(model, opt, path):
+def load(model, opt, device, path):
   # Load model weights
   # Training crashed when lr dropped to complex numbers
 
@@ -184,7 +184,7 @@ def load(model, opt, path):
   checkpoint = torch.load(path)
   model.load_state_dict(checkpoint['model'], strict=False)
   opt.load_state_dict(checkpoint['optimizer'])
-  model.to(dev)
+  model.to(device)
 
   print(f'Model loaded into {summary_dev}!')
   model_stats = summary(model, device=summary_dev)

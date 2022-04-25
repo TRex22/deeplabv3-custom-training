@@ -30,7 +30,7 @@ class SegmentationPresetEval:
             [
                 T.RandomResize(base_size, base_size),
                 T.PILToTensor(),
-                T.ConvertImageDtype(torch.float),
+                T.ConvertImageDtype(torch.float16),
                 T.Normalize(mean=mean, std=std),
             ]
         )

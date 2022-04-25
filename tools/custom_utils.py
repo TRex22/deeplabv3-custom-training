@@ -10,6 +10,7 @@ from torch import optim
 from torch import nn
 import torchvision
 from torch.utils.data import DataLoader
+import transforms as T
 
 import tqdm
 
@@ -62,7 +63,7 @@ def collate_cityscapes(batch):
     images.append(transforms.ToTensor()(batch[i][0]))
     targets.append(transforms.ToTensor()(batch[i][1]))
 
-  return torch.from_numpy(np.array(images)), torch.from_numpy(np.array(targets))
+  return np.array(images), np.array(targets)
 
 def load_dataset(config, root, image_set, category_list=None, batch_size=1, sample=False):
   if config["dataset"] == "COCO16" or config["dataset"] == "COCO21":
@@ -79,7 +80,18 @@ def load_dataset(config, root, image_set, category_list=None, batch_size=1, samp
     subset = torch.utils.data.Subset(dataset, subset_idex)
 
   if config["dataset"] == "cityscapes":
-    dataloader = DataLoader(subset, batch_size=batch_size, shuffle=True, drop_last=True, collate_fn=collate_cityscapes)
+    mean = (0.485, 0.456, 0.406)
+    std = (0.229, 0.224, 0.225)
+
+    transforms = T.Compose(
+      [
+        T.RandomResize(520, 520),
+        T.PILToTensor(),
+        T.ConvertImageDtype(torch.float16),
+        T.Normalize(mean=mean, std=std),
+      ]
+    )
+    dataloader = DataLoader(subset, batch_size=batch_size, shuffle=True, drop_last=True, transforms=transforms)
   else:
     dataloader = DataLoader(subset, batch_size=batch_size, shuffle=True, drop_last=True, collate_fn=utils.collate_fn)
 

@@ -58,18 +58,7 @@ def load_dataset(config, root, image_set, category_list=None, batch_size=1, samp
   if config["dataset"] == "COCO16" or config["dataset"] == "COCO21":
     dataset = load_coco(root, image_set, category_list=category_list)
   elif config["dataset"] == "cityscapes":
-    dataset = torchvision.datasets.Cityscapes(root, split=image_set, mode='fine', target_type='semantic') # TODO: Cityscapes 'test'
-
-  sample_size = len(dataset) * config["sample_percentage"]
-  if sample_size < batch_size:
-    sample_size = len(dataset)
-
-  if sample:
-    subset_idex = list(range(int(sample_size))) # TODO: Unload others
-    subset = torch.utils.data.Subset(dataset, subset_idex)
-
-  if config["dataset"] == "cityscapes":
-    mean = (0.485, 0.456, 0.406)
+    mean = (0.485, 0.456, 0.406) # Taken from COCO reference
     std = (0.229, 0.224, 0.225)
 
     transforms_arr = transforms.Compose(
@@ -80,7 +69,19 @@ def load_dataset(config, root, image_set, category_list=None, batch_size=1, samp
         transforms.Normalize(mean=mean, std=std),
       ]
     )
-    dataloader = DataLoader(subset, batch_size=batch_size, shuffle=True, drop_last=True, transforms=transforms_arr)
+
+    dataset = torchvision.datasets.Cityscapes(root, split=image_set, mode='fine', target_type='semantic', transforms=transforms_arr) # TODO: Cityscapes 'test'
+
+  sample_size = len(dataset) * config["sample_percentage"]
+  if sample_size < batch_size:
+    sample_size = len(dataset)
+
+  if sample:
+    subset_idex = list(range(int(sample_size))) # TODO: Unload others
+    subset = torch.utils.data.Subset(dataset, subset_idex)
+
+  if config["dataset"] == "cityscapes":
+    dataloader = DataLoader(subset, batch_size=batch_size, shuffle=True, drop_last=True)
   else:
     dataloader = DataLoader(subset, batch_size=batch_size, shuffle=True, drop_last=True, collate_fn=utils.collate_fn)
 

@@ -16,5 +16,5 @@
   "load_model": false,
   "opt_function": "ADAM", // "ADAM",
   "save_path": "/data/trained_models/deeplabv3_resnet50/adam/",
-  "dataset_path": "/mnt/scratch_disk/data/coco/data_raw/"
+  "dataset_path": "/data/data/cityscapes/data_raw/"
 }

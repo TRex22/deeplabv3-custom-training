@@ -1,7 +1,7 @@
 {
   "selected_model": "deeplabv3_resnet50", // "deeplabv3_resnet101"
   "batch_size": 16,
-  "val_batch_size": 8, // 8 // Val is not cropped
+  "val_batch_size": 1, // 8 // Val is not cropped // 1 seems to be the fastest
   "outer_batch_size_multiplier": 20, //15, // Used to pre-load data
   "epochs": 10,
   "sample_percentage": 0.1, //0.25 // 0.1 // 1.0

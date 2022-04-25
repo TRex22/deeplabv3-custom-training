@@ -54,11 +54,23 @@ def save_csv(file_path, csv_data):
   with open(file_path, 'a') as f:
     f.write(f'{csv_data}\n')
 
-def load_dataset(config, root, image_set, category_list=None):
+def load_dataset(config, root, image_set, category_list=None, batch_size=, sample=False):
   if config["dataset"] == "COCO16" or config["dataset"] == "COCO21":
-    return load_coco(root, image_set, category_list=category_list)
+    dataset = load_coco(root, image_set, category_list=category_list)
   elif config["dataset"] == "cityscapes":
-    return torchvision.datasets.Cityscapes(root, split=image_set, mode='fine', target_type='semantic') # TODO: Cityscapes 'test'
+    dataset = torchvision.datasets.Cityscapes(root, split=image_set, mode='fine', target_type='semantic') # TODO: Cityscapes 'test'
+
+  if sample:
+    subset_idex = list(range(int(len(dataset) * config["sample_percentage"]))) # TODO: Unload others
+    subset = torch.utils.data.Subset(train_dataset, subset_idex)
+
+  if config["dataset"] == "cityscapes":
+    dataloader = DataLoader(subset, batch_size=batch_size, shuffle=True, drop_last=True)
+  else:
+    dataloader = DataLoader(subset, batch_size=batch_size, shuffle=True, drop_last=True, collate_fn=utils.collate_fn)
+
+  return [dataset, dataloader]
+
 
 def fetch_category_list(config):
   if config["dataset"] == "COCO16":
@@ -254,10 +266,7 @@ def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, co
 
 def train(model, device, loss_func, opt, epoch, config, outer_batch_size, category_list=None):
   # Load Data - in train step to save memory
-  train_dataset = load_dataset(config, config['dataset_path'], 'train', category_list=category_list)
-  subset_idex = list(range(int(len(train_dataset) * config["sample_percentage"]))) # TODO: Unload others
-  train_subset = torch.utils.data.Subset(train_dataset, subset_idex)
-  train_dataloader = DataLoader(train_subset, batch_size=outer_batch_size, shuffle=True, drop_last=True, collate_fn=utils.collate_fn)
+  train_dataset, train_dataloader = load_dataset(config, config['dataset_path'], 'train', category_list=category_list, batch_size=outer_batch_size, sample=True)
 
   model = model.train()
   scaler = torch.cuda.amp.GradScaler(enabled=True)
@@ -272,8 +281,7 @@ def train(model, device, loss_func, opt, epoch, config, outer_batch_size, catego
 
 def validate(model, device, loss_func, epoch, config, category_list=None, save=True):
   # Load Data - in val step to save memory
-  val_dataset = load_dataset(config, config['dataset_path'], 'val', category_list=category_list)
-  val_dataloader = DataLoader(val_dataset, batch_size=config["val_batch_size"], shuffle=False, drop_last=True, collate_fn=utils.collate_fn)
+  val_dataset, val_dataloader = load_dataset(config, config['dataset_path'], 'val', category_list=category_list, batch_size=config["val_batch_size"], sample=False)
 
   model = model.eval()
   scaler = torch.cuda.amp.GradScaler(enabled=True)

@@ -54,6 +54,20 @@ def save_csv(file_path, csv_data):
   with open(file_path, 'a') as f:
     f.write(f'{csv_data}\n')
 
+def load_dataset(config, root, image_set category_list=None):
+  if config["dataset"] == "COCO16" or config["dataset"] == "COCO21":
+    return load_coco(root, image_set, category_list=category_list)
+  elif config["dataset"] == "cityscapes":
+    return torchvision.datasets.Cityscapes(root, split=image_set, mode='fine', target_type='semantic') # TODO: Cityscapes 'test'
+
+def fetch_category_list(config):
+  if config["dataset"] == "COCO16":
+    return  [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 13, 14, 15, 16] # New list of categories
+  elif config["dataset"] == "COCO21":
+    return [0, 5, 2, 16, 9, 44, 6, 3, 17, 62, 21, 67, 18, 19, 4, 1, 64, 20, 63, 7, 72] # Original List
+  elif config["dataset"] == "cityscapes":
+    return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, -1] # Cityscapes
+
 # COCO Dataset
 # train_image_path = '/data/data/coco/data_raw/train2017'
 # val_image_path = '/data/data/coco/data_raw/val2017'
@@ -239,7 +253,7 @@ def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, co
 
 def train(model, device, loss_func, opt, epoch, config, outer_batch_size, category_list=None):
   # Load Data - in train step to save memory
-  train_dataset = load_coco(config['coco_path'], 'train', category_list=category_list)
+  train_dataset = load_dataset(config, config['dataset_path'], 'train', category_list=category_list)
   subset_idex = list(range(int(len(train_dataset) * config["sample_percentage"]))) # TODO: Unload others
   train_subset = torch.utils.data.Subset(train_dataset, subset_idex)
   train_dataloader = DataLoader(train_subset, batch_size=outer_batch_size, shuffle=True, drop_last=True, collate_fn=utils.collate_fn)
@@ -257,7 +271,7 @@ def train(model, device, loss_func, opt, epoch, config, outer_batch_size, catego
 
 def validate(model, device, loss_func, epoch, config, category_list=None, save=True):
   # Load Data - in val step to save memory
-  val_dataset = load_coco(config['coco_path'], 'val', category_list=category_list)
+  val_dataset = load_dataset(config, config['dataset_path'], 'val', category_list=category_list)
   val_dataloader = DataLoader(val_dataset, batch_size=config["val_batch_size"], shuffle=False, drop_last=True, collate_fn=utils.collate_fn)
 
   model = model.eval()

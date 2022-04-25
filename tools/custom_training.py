@@ -20,8 +20,7 @@ import custom_utils
 
 print('Custom train deeplabv3 ...')
 
-# category_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21] # New COCO list
-category_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 13, 14, 15, 16]
+category_list = custom_utils.fetch_category_list()
 
 if len(sys.argv) == 3: # params: model config
   config_path = sys.argv[2]

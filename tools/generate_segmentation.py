@@ -80,7 +80,7 @@ image = Image.open(input_image_path)
 input = torchvision.transforms.functional.to_tensor(image).to(device).unsqueeze(0)
 prediction = model(input)
 
-output = prediction['out'].argmax(0).argmax(1).cpu().numpy()
+output = prediction['out'].argmax(0).argmax(0).cpu().numpy()
 segmentation = convert_segmentation_to_colour(output)
 
 torch.save(output, f'{save_path}/raw_output.pth')

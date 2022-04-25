@@ -86,4 +86,4 @@ output = np.transpose(prediction['out'].argmax(1).cpu().numpy())
 segmentation = convert_segmentation_to_colour(output)
 
 torch.save(output, f'{save_path}/raw_output.pth')
-torch.save(segmentation, f'{save_path}/segmentation.bmp')
+torchvision.utils.save_image(segmentation, f'{save_path}/segmentation.png')

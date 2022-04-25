@@ -62,7 +62,7 @@ def collate_cityscapes(batch):
     images.append(transforms.ToTensor()(batch[i][0]))
     targets.append(transforms.ToTensor()(batch[i][1]))
 
-  return np.array(images), np.array(targets)
+  return torch.from_numpy(np.array(images)), torch.from_numpy(np.array(targets))
 
 def load_dataset(config, root, image_set, category_list=None, batch_size=1, sample=False):
   if config["dataset"] == "COCO16" or config["dataset"] == "COCO21":

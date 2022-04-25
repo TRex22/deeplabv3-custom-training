@@ -69,7 +69,7 @@ def load_coco(root, image_set, category_list=None):
 
   if category_list is None:
     category_list = [0, 5, 2, 16, 9, 44, 6, 3, 17, 62, 21, 67, 18, 19, 4, 1, 64, 20, 63, 7, 72] # Default
-    # CAT_LIST = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21] # New
+    # category_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21] # New
 
   if image_set == 'train':
     transforms = presets.SegmentationPresetTrain(base_size=520, crop_size=480)

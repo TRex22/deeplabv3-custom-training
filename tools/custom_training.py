@@ -20,6 +20,8 @@ import custom_utils
 
 print('Custom train deeplabv3 ...')
 
+category_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21] # New COCO list
+
 if len(sys.argv) == 3: # params: model config
   config_path = sys.argv[2]
 elif len(sys.argv) == 2: # params: either model or config
@@ -67,7 +69,7 @@ if __name__ == '__main__':
     # time.sleep(30)
     # torch.cuda.empty_cache()
     # torch.cuda.synchronize()
-    custom_utils.validate(model, dev, loss_func, epoch, config)
+    custom_utils.validate(model, dev, loss_func, epoch, config, category_list=category_list)
 
     pbar.write(f'Save epoch {epoch}.')
     custom_utils.save(model, opt, epoch, config, save_path)

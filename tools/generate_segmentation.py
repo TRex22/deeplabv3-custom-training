@@ -26,7 +26,7 @@ model, _opt = custom_utils.load(model, opt, device, model_path) # Load model
 model = model.eval()
 
 image = Image.open(input_image_path)
-input = torchvision.transforms.functional.to_tensor(image).to(device)
+input = torchvision.transforms.functional.to_tensor(image).to(device).unsqueeze(0)
 prediction = model(input)
 
 output = prediction['out']

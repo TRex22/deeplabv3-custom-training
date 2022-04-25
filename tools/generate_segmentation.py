@@ -49,12 +49,11 @@ cityscapes_colours = [
 
 def convert_segmentation_to_colour(segmentation_map):
   width, height = segmentation_map.shape[0:2]
-  colour_segmentation_map = segmentation_map.copy()
+  colour_segmentation_map = np.zeros((segmentation_map.shape[0], segmentation_map.shape[1], 3))
 
   for w in range(width):
     for h in range(height):
-      # colour_segmentation_map[w][h] = cityscapes_colours[colour_segmentation_map[w][h][0]]
-      colour_segmentation_map[w][h] = cityscapes_colours[colour_segmentation_map[w][h][0]]
+      colour_segmentation_map[w][h] = cityscapes_colours[segmentation_map[w][h][0]]
 
   return colour_segmentation_map
 

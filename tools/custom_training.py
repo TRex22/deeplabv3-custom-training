@@ -149,6 +149,7 @@ def loss_batch(model, device, scaler, loss_func, xb, yb, opt=None):
   target = yb.to(device)
 
   loss = loss_func(output, target, ignore_index=255)
+  dice_loss = dice_coef(target, output)
 
   sum_batch_iou_score = 0.0
   for i in range(output.shape[0]):
@@ -174,11 +175,12 @@ def loss_batch(model, device, scaler, loss_func, xb, yb, opt=None):
     scaler.update()
     opt.zero_grad(set_to_none=True) # set_to_none=True here can modestly improve performance
 
-  return [loss.cpu().item(), iou_score, opt]
+  return [loss.cpu().item(), dice_loss, iou_score, opt]
 
 def run_loop(model, device, dataloader, batch_size, scaler, loss_func, opt=None):
   sum_of_loss = 0.0
   sum_of_iou = 0.0
+  sum_of_dice = 0.0
 
   pbar = tqdm.tqdm(total=len(dataloader))
 
@@ -186,39 +188,43 @@ def run_loop(model, device, dataloader, batch_size, scaler, loss_func, opt=None)
   if opt is None:
     # Dont use sub-batches
     for xb, yb in tqdm.tqdm(dataloader):
-      loss, iou_score, opt = loss_batch(model, device, scaler, loss_func, xb, yb, opt=opt)
+      loss, dice_loss, iou_score, opt = loss_batch(model, device, scaler, loss_func, xb, yb, opt=opt)
 
       sum_of_loss += loss
       sum_of_iou += iou_score
+      sum_of_dice += dice_loss
 
     final_loss = sum_of_loss / len(dataloader)
     final_iou = sum_of_iou / len(dataloader)
+    final_dice = sum_of_dice / len(dataloader)
   else: # Use sub-batches
     for inner_batch in dataloader:
       for i in range(0, inner_batch[0].shape[0], batch_size):
         xb = inner_batch[0][i:i+batch_size]
         yb = inner_batch[1][i:i+batch_size]
 
-        loss, iou_score, opt = loss_batch(model, device, scaler, loss_func, xb, yb, opt=opt)
+        loss, dice_loss, iou_score, opt = loss_batch(model, device, scaler, loss_func, xb, yb, opt=opt)
 
         sum_of_loss += loss
         sum_of_iou += iou_score
+        sum_of_dice += dice_loss
 
       final_loss = sum_of_loss / (len(dataloader) * batch_size)
       final_iou = sum_of_iou / (len(dataloader) * batch_size)
+      final_dice = sum_of_dice / (len(dataloader) * batch_size)
 
       pbar.update(1)
 
   if opt is not None:
-    pbar.write(f'Epoch {epoch} train loss: {final_loss} train IoU: {final_iou}')
+    pbar.write(f'Epoch {epoch} train loss: {final_loss} train IoU: {final_iou} train dice: {final_dice}')
 
     train_csv_path = f'{config["save_path"]}/train_loss.csv'
-    save_csv(train_csv_path, f'{final_loss},{final_iou}')
+    save_csv(train_csv_path, f'{final_loss},{final_iou},{final_dice}')
   else:
-    pbar.write(f'Epoch {epoch} val loss: {final_loss} val IoU: {final_iou}')
+    pbar.write(f'Epoch {epoch} val loss: {final_loss} val IoU: {final_iou} val dice: {final_dice}')
 
     val_csv_path = f'{config["save_path"]}/val_loss.csv'
-    save_csv(val_csv_path, f'{final_loss},{final_iou}')
+    save_csv(val_csv_path, f'{final_loss},{final_iou},{final_dice}')
 
   return [final_loss, final_iou, opt]
 
@@ -268,6 +274,19 @@ def compute_iou(output, target):
 
   return iou_score
 
+# https://towardsdatascience.com/choosing-and-customizing-loss-functions-for-image-processing-a0e4bf665b0a
+# https://stackoverflow.com/questions/47084179/how-to-calculate-multi-class-dice-coefficient-for-multiclass-image-segmentation
+def dice_coef(y_true, y_pred, epsilon=1e-6):
+"""Altered Sorensen–Dice coefficient with epsilon for smoothing."""
+    y_true_flatten = np.asarray(y_true).astype(np.bool)
+    y_pred_flatten = np.asarray(y_pred).astype(np.bool)
+
+    if not np.sum(y_true_flatten) + np.sum(y_pred_flatten):
+        return 1.0
+
+    return (2. * np.sum(y_true_flatten * y_pred_flatten)) /\
+           (np.sum(y_true_flatten) + np.sum(y_pred_flatten) + epsilon)
+
 ################################################################################
 # Main Thread                                                                  #
 ################################################################################
@@ -314,7 +333,8 @@ if __name__ == '__main__':
     model = load(model, opt, model_path) # Load model
 
   # Based on reference code
-  loss_func = nn.functional.cross_entropy
+  loss_func = nn.functional.cross_entropy # TODO: Add in weight
+  # Dice Co-Efficient
 
   pbar = tqdm.tqdm(total=config["epochs"])
   for epoch in range(start_epoch, config["epochs"], 1):

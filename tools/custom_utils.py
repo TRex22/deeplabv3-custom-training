@@ -186,8 +186,8 @@ def load(model, opt, device, path):
   opt.load_state_dict(checkpoint['optimizer'])
   model.to(device)
 
-  print(f'Model loaded into {summary_dev}!')
-  model_stats = summary(model, device=summary_dev)
+  print(f'Model loaded into {device}!')
+  model_stats = summary(model, device=device)
 
   return model, opt
 

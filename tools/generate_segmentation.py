@@ -1,6 +1,8 @@
 import sys
 import torch
 import torchvision
+
+import numpy as np
 from PIL import Image
 
 import custom_utils
@@ -51,6 +53,7 @@ def convert_segmentation_to_colour(segmentation_map):
 
   for w in range(width):
     for h in range(height):
+      # colour_segmentation_map[w][h] = cityscapes_colours[colour_segmentation_map[w][h][0]]
       colour_segmentation_map[w][h] = cityscapes_colours[colour_segmentation_map[w][h][0]]
 
   return colour_segmentation_map
@@ -80,7 +83,7 @@ image = Image.open(input_image_path)
 input = torchvision.transforms.functional.to_tensor(image).to(device).unsqueeze(0)
 prediction = model(input)
 
-output = prediction['out'].argmax(0).argmax(0).cpu().numpy()
+output = np.transpose(prediction['out'].argmax(1).cpu().numpy())
 segmentation = convert_segmentation_to_colour(output)
 
 torch.save(output, f'{save_path}/raw_output.pth')

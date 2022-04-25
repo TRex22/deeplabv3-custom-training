@@ -25,8 +25,8 @@ config = {
 batch_size = 16
 
 print('=== Load COCO21 ===')
-train_dataset, train_dataloader = custom_utils.load_dataset(config, config['dataset_path'], 'train', category_list=category_list, batch_size=batch_size, sample=True)
-val_dataset, val_dataloader = custom_utils.load_dataset(config, config['dataset_path'], 'val', category_list=category_list, batch_size=1, sample=False)
+train_dataset, train_dataloader = custom_utils.load_dataset(config, config['dataset_path'], 'train', category_list=None, batch_size=batch_size, sample=True)
+val_dataset, val_dataloader = custom_utils.load_dataset(config, config['dataset_path'], 'val', category_list=None, batch_size=1, sample=False)
 
 print(f'train_dataset: {len(train_dataset)}, train_dataloader: {len(train_dataloader)}')
 print(f'val_dataset: {len(val_dataset)}, val_dataloader: {len(val_dataloader)}')
@@ -39,8 +39,8 @@ config = {
   "sample_percentage": 0.1
 }
 
-train_dataset, train_dataloader = custom_utils.load_dataset(config, config['dataset_path'], 'train', category_list=category_list, batch_size=batch_size, sample=True)
-val_dataset, val_dataloader = custom_utils.load_dataset(config, config['dataset_path'], 'val', category_list=category_list, batch_size=1, sample=False)
+train_dataset, train_dataloader = custom_utils.load_dataset(config, config['dataset_path'], 'train', category_list=None, batch_size=batch_size, sample=True)
+val_dataset, val_dataloader = custom_utils.load_dataset(config, config['dataset_path'], 'val', category_list=None, batch_size=1, sample=False)
 
 print(f'train_dataset: {len(train_dataset)}, train_dataloader: {len(train_dataloader)}')
 print(f'val_dataset: {len(val_dataset)}, val_dataloader: {len(val_dataloader)}')
@@ -53,8 +53,8 @@ config = {
   "sample_percentage": 1.0
 }
 
-train_dataset, train_dataloader = custom_utils.load_dataset(config, config['dataset_path'], 'train', category_list=category_list, batch_size=batch_size, sample=True)
-val_dataset, val_dataloader = custom_utils.load_dataset(config, config['dataset_path'], 'val', category_list=category_list, batch_size=1, sample=False)
+train_dataset, train_dataloader = custom_utils.load_dataset(config, config['dataset_path'], 'train', category_list=None, batch_size=batch_size, sample=True)
+val_dataset, val_dataloader = custom_utils.load_dataset(config, config['dataset_path'], 'val', category_list=None, batch_size=1, sample=False)
 
 print(f'train_dataset: {len(train_dataset)}, train_dataloader: {len(train_dataloader)}')
 print(f'val_dataset: {len(val_dataset)}, val_dataloader: {len(val_dataloader)}')
@@ -67,8 +67,8 @@ config = {
   "sample_percentage": 0.1
 }
 
-train_dataset, train_dataloader = custom_utils.load_dataset(config, config['dataset_path'], 'train', category_list=category_list, batch_size=batch_size, sample=True)
-val_dataset, val_dataloader = custom_utils.load_dataset(config, config['dataset_path'], 'val', category_list=category_list, batch_size=1, sample=False)
+train_dataset, train_dataloader = custom_utils.load_dataset(config, config['dataset_path'], 'train', category_list=None, batch_size=batch_size, sample=True)
+val_dataset, val_dataloader = custom_utils.load_dataset(config, config['dataset_path'], 'val', category_list=None, batch_size=1, sample=False)
 
 print(f'train_dataset: {len(train_dataset)}, train_dataloader: {len(train_dataloader)}')
 print(f'val_dataset: {len(val_dataset)}, val_dataloader: {len(val_dataloader)}')
@@ -81,8 +81,8 @@ config = {
   "sample_percentage": 1.0
 }
 
-train_dataset, train_dataloader = custom_utils.load_dataset(config, config['dataset_path'], 'train', category_list=category_list, batch_size=batch_size, sample=True)
-val_dataset, val_dataloader = custom_utils.load_dataset(config, config['dataset_path'], 'val', category_list=category_list, batch_size=1, sample=False)
+train_dataset, train_dataloader = custom_utils.load_dataset(config, config['dataset_path'], 'train', category_list=None, batch_size=batch_size, sample=True)
+val_dataset, val_dataloader = custom_utils.load_dataset(config, config['dataset_path'], 'val', category_list=None, batch_size=1, sample=False)
 
 print(f'train_dataset: {len(train_dataset)}, train_dataloader: {len(train_dataloader)}')
 print(f'val_dataset: {len(val_dataset)}, val_dataloader: {len(val_dataloader)}')
@@ -95,15 +95,15 @@ config = {
   "sample_percentage": 0.1
 }
 
-train_dataset, train_dataloader = custom_utils.load_dataset(config, config['dataset_path'], 'train', category_list=category_list, batch_size=batch_size, sample=True)
-val_dataset, val_dataloader = custom_utils.load_dataset(config, config['dataset_path'], 'val', category_list=category_list, batch_size=1, sample=False)
+train_dataset, train_dataloader = custom_utils.load_dataset(config, config['dataset_path'], 'train', category_list=None, batch_size=batch_size, sample=True)
+val_dataset, val_dataloader = custom_utils.load_dataset(config, config['dataset_path'], 'val', category_list=None, batch_size=1, sample=False)
 
 print(f'train_dataset: {len(train_dataset)}, train_dataloader: {len(train_dataloader)}')
 print(f'val_dataset: {len(val_dataset)}, val_dataloader: {len(val_dataloader)}')
 
 print('=== DataSet Calls ==')
-coco_dataset_train = load_coco("/mnt/scratch_disk/data/coco/data_raw/", 'train', category_list=category_list)
-coco_dataset_test = load_coco("/mnt/scratch_disk/data/coco/data_raw/", 'test', category_list=category_list)
+coco_dataset_train = load_coco("/mnt/scratch_disk/data/coco/data_raw/", 'train', category_list=None)
+coco_dataset_test = load_coco("/mnt/scratch_disk/data/coco/data_raw/", 'test', category_list=None)
 
 cityscapes_dataset_train = torchvision.datasets.Cityscapes("/data/data/cityscapes/data_raw/", split='train', mode='fine', target_type='semantic', transforms=custom_utils.cityscapes_transforms()) # TODO: Cityscapes 'test'
 cityscapes_dataset_test = torchvision.datasets.Cityscapes("/data/data/cityscapes/data_raw/", split='test', mode='fine', target_type='semantic', transforms=custom_utils.cityscapes_transforms()) # TODO: Cityscapes 'test'

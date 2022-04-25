@@ -74,7 +74,7 @@ def load_dataset(config, root, image_set, category_list=None, batch_size=1, samp
 
     transforms_arr = transforms.Compose(
       [
-        transforms.RandomResize(520, 520),
+        transforms.RandomCrop(520, 520),
         transforms.PILToTensor(),
         transforms.ConvertImageDtype(torch.float16),
         transforms.Normalize(mean=mean, std=std),

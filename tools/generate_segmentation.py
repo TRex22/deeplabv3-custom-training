@@ -20,7 +20,7 @@ config, _start_epoch = custom_utils.open_config(model_path)
 device, summary_dev = custom_utils.fetch_device()
 
 category_list = custom_utils.fetch_category_list(config)
-model, opt = custom_utils.initialise_model(dev, config, num_classes=len(category_list))
+model, opt = custom_utils.initialise_model(device, config, num_classes=len(category_list))
 
 model = custom_utils.load(model, opt, model_path) # Load model
 model = model.eval()

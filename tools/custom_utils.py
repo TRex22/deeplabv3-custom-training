@@ -231,9 +231,8 @@ def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, co
   else:
     pbar.write(f'Epoch {epoch} val loss: {final_loss} val IoU: {final_iou} val dice: {final_dice}')
 
-    val_csv_path = f'{config["save_path"]}/val_loss.csv'
-
     if save:
+      val_csv_path = f'{config["save_path"]}/val_loss.csv'
       save_csv(val_csv_path, f'{final_loss},{final_iou},{final_dice}')
 
   return [final_loss, final_iou, opt]

@@ -60,8 +60,9 @@ def load_dataset(config, root, image_set, category_list=None, batch_size=1, samp
   elif config["dataset"] == "cityscapes":
     dataset = torchvision.datasets.Cityscapes(root, split=image_set, mode='fine', target_type='semantic') # TODO: Cityscapes 'test'
 
-  if sample:
-    subset_idex = list(range(int(len(dataset) * config["sample_percentage"]))) # TODO: Unload others
+  sample_size = len(dataset) * config["sample_percentage"]
+  if sample and sample_size > batch_size:
+    subset_idex = list(range(int(sample_size))) # TODO: Unload others
     subset = torch.utils.data.Subset(dataset, subset_idex)
 
   if config["dataset"] == "cityscapes":
@@ -69,7 +70,7 @@ def load_dataset(config, root, image_set, category_list=None, batch_size=1, samp
   else:
     dataloader = DataLoader(subset, batch_size=batch_size, shuffle=True, drop_last=True, collate_fn=utils.collate_fn)
 
-  print(f'Number of data points for {image_set}: {len(dataloader)}')
+  # print(f'Number of data points for {image_set}: {len(dataloader)}')
   return [dataset, dataloader]
 
 

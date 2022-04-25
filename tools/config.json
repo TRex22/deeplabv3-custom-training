@@ -3,7 +3,7 @@
   "batch_size": 16,
   "val_batch_size": 8, // 8 // Val is not cropped
   "outer_batch_size_multiplier": 20, //15, // Used to pre-load data
-  "epochs": 5,
+  "epochs": 10,
   "sample_percentage": 0.1, //0.25 // 0.1 // 1.0
   "lr": 0.02,
   "momentum": 0.8,
@@ -13,7 +13,7 @@
   "weight_decay": 0,
   "amsgrad": false,
   "load_model": false,
-  "opt_function": "SDG", // "ADAM",
-  "save_path": "/data/trained_models/deeplabv3_resnet50/sdg/",
+  "opt_function": "ADAM", // "ADAM",
+  "save_path": "/data/trained_models/deeplabv3_resnet50/adam/",
   "coco_path": "/mnt/scratch_disk/data/coco/data_raw/"
 }

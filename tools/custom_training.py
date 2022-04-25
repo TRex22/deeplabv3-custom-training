@@ -79,7 +79,7 @@ def load_coco(root, image_set):
   if image_set == 'train':
     transforms = presets.SegmentationPresetTrain(base_size=520, crop_size=480)
   else:
-    transforms = presets.SegmentationPresetEval(base_size=520, crop_size=480)
+    transforms = presets.SegmentationPresetEval(base_size=520, crop_size=480) # crop size added
 
   return get_coco(root, image_set, transforms, category_list=category_list)
 
@@ -149,7 +149,7 @@ def loss_batch(model, device, scaler, loss_func, xb, yb, opt=None):
   target = yb.to(device)
 
   loss = loss_func(output, target, ignore_index=255)
-  dice_loss = dice_coef(target, output)
+  dice_loss = dice_coef(target, output.argmax(1))
 
   sum_batch_iou_score = 0.0
   for i in range(output.shape[0]):

@@ -30,6 +30,8 @@ https://gist.github.com/salihkaragoz/8c3291b55abee745389de150df94bbca
 CAT_LIST = [0, 5, 2, 16, 9, 44, 6, 3, 17, 62, 21, 67, 18, 19, 4, 1, 64, 20, 63, 7, 72]
 
 ## New Labels
+## TODO: List reduced classes
+CAT_LIST = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 13, 14, 15, 16]
 CAT_LIST = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21]
 
 0: __background__

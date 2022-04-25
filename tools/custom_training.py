@@ -20,7 +20,8 @@ import custom_utils
 
 print('Custom train deeplabv3 ...')
 
-category_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21] # New COCO list
+# category_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21] # New COCO list
+category_list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 13, 14, 15, 16]
 
 if len(sys.argv) == 3: # params: model config
   config_path = sys.argv[2]
@@ -49,7 +50,7 @@ if __name__ == '__main__':
   except RuntimeError:
     pass
 
-  model, opt = custom_utils.initialise_model(dev, config)
+  model, opt = custom_utils.initialise_model(dev, config, num_classes=len(category_list))
 
   if config["load_model"]:
     model = custom_utils.load(model, opt, model_path) # Load model

@@ -7,8 +7,10 @@
 
 # https://stackoverflow.com/questions/63892031/how-to-train-deeplabv3-on-custom-dataset-on-pytorch
 import sys
-import torch
 import tqdm
+
+import torch
+from torch import nn
 
 import custom_utils
 
@@ -37,14 +39,7 @@ save_path = config["save_path"]
 print(f'Config: {config}')
 
 # Load devices
-print(f'Cuda available? {torch.cuda.is_available()}')
-
-dev = torch.device('cpu')
-summary_dev = 'cpu'
-
-if torch.cuda.is_available():
-  dev = torch.device('cuda')
-  summary_dev = 'cuda'
+dev, summary_dev = custom_utils.fetch_device()
 
 if __name__ == '__main__':
   try:
@@ -72,7 +67,7 @@ if __name__ == '__main__':
     # time.sleep(30)
     # torch.cuda.empty_cache()
     # torch.cuda.synchronize()
-    custom_utils.validate(model, dev, loss_func, epoch, outer_batch_size)
+    custom_utils.validate(model, dev, loss_func, epoch)
 
     pbar.write(f'Save epoch {epoch}.')
     custom_utils.save(model, opt, epoch, config, save_path)

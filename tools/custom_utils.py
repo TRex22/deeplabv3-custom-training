@@ -75,6 +75,17 @@ def load_coco(root, image_set):
 
   return get_coco(root, image_set, transforms, category_list=category_list)
 
+def fetch_device():
+  print(f'Cuda available? {torch.cuda.is_available()}')
+  dev = torch.device('cpu')
+  summary_dev = 'cpu'
+
+  if torch.cuda.is_available():
+    dev = torch.device('cuda')
+    summary_dev = 'cuda'
+
+  return [dev, summary_dev]
+
 def xavier_uniform_init(layer):
   if type(layer) == nn.Linear or type(layer) == nn.Conv2d:
     nn.init.xavier_uniform_(layer.weight)
@@ -238,7 +249,7 @@ def train(model, device, loss_func, opt, epoch, outer_batch_size):
 
   return [model, opt]
 
-def validate(model, device, loss_func, epoch, outer_batch_size):
+def validate(model, device, loss_func, epoch):
   # Load Data - in val step to save memory
   val_dataset = load_coco(config['coco_path'], 'val')
   val_dataloader = DataLoader(val_dataset, batch_size=config["val_batch_size"], shuffle=False, drop_last=True, collate_fn=utils.collate_fn)

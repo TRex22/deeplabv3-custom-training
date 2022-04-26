@@ -26,13 +26,13 @@ if len(sys.argv) == 3: # params: model config
   config_path = sys.argv[2]
   model_path = sys.argv[1]
   config, start_epoch, _model_path = custom_utils.open_config(config_path)
+  start_epoch = torch.load(model_path)['epoch'] + 1
 elif len(sys.argv) == 2: # params: either model or config
   config_path = sys.argv[1]
   config, start_epoch, model_path = custom_utils.open_config(config_path)
 else:
   raise RuntimeError("Invalid Parameters, please add either the model path, config path or both")
 
-print(f'start_epoch: {start_epoch}')
 print(f'Config/Model path: {config_path}')
 
 # Used for pre-fetching
@@ -42,6 +42,7 @@ config["betas"] = betas
 save_path = config["save_path"]
 
 print(f'Config: {config}')
+print(f'start_epoch: {start_epoch}')
 
 # Load devices
 dev, summary_dev = custom_utils.fetch_device()

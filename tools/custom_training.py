@@ -32,6 +32,7 @@ elif len(sys.argv) == 2: # params: either model or config
 else:
   raise RuntimeError("Invalid Parameters, please add either the model path, config path or both")
 
+print(f'start_epoch: {start_epoch}')
 print(f'Config/Model path: {config_path}')
 
 # Used for pre-fetching

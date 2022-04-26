@@ -269,6 +269,8 @@ def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, co
       sum_of_iou += iou_score
       sum_of_dice += dice_loss
 
+      pbar.update(1)
+
     final_loss = sum_of_loss / len(dataloader)
     final_iou = sum_of_iou / len(dataloader)
     final_dice = sum_of_dice / len(dataloader)
@@ -279,7 +281,6 @@ def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, co
       val_csv_path = f'{config["save_path"]}/val_loss.csv'
       save_csv(val_csv_path, f'{final_loss},{final_iou},{final_dice}')
 
-    pbar.update(1)
   else: # Use sub-batches / Training
     for inner_batch in dataloader:
       for i in range(0, inner_batch[0].shape[0], batch_size):

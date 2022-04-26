@@ -43,15 +43,17 @@ def open_config(path):
 
     config = json.loads(raw_json)
     epoch = 0
+    model_path = None
   except:
     checkpoint = torch.load(path)
     config = checkpoint['args']
     epoch = checkpoint['epoch'] + 1
+    model_path = path
 
   config["save_path"] = f'{config["save_path"]}/{config["dataset"]}'
   create_folder(config["save_path"])
 
-  return [config, epoch]
+  return [config, epoch, model_path]
 
 def save_csv(file_path, csv_data):
   with open(file_path, 'a') as f:
@@ -323,8 +325,6 @@ def validate(model, device, loss_func, epoch, config, category_list=None, save=T
 
   sum_of_loss = 0.0
   sum_of_iou = 0.0
-
-  pbar = tqdm.tqdm(total=len(val_dataloader))
 
   with torch.no_grad():
     final_loss, final_iou, _opt = run_loop(model, device, val_dataloader, config["val_batch_size"], scaler, loss_func, epoch, config, opt=None, save=save)

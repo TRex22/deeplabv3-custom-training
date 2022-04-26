@@ -28,7 +28,7 @@ else:
   raise RuntimeError("Invalid Parameters, please add either the model path, config path or both")
 
 print(f'Config/Model path: {config_path}')
-config, start_epoch = custom_utils.open_config(config_path)
+config, start_epoch, model_path = custom_utils.open_config(config_path)
 
 # Used for pre-fetching
 outer_batch_size = config["batch_size"] * config['outer_batch_size_multiplier']
@@ -50,8 +50,8 @@ if __name__ == '__main__':
   category_list = custom_utils.fetch_category_list(config)
   model, opt = custom_utils.initialise_model(dev, config, num_classes=len(category_list))
 
-  if config["load_model"]:
-    model = custom_utils.load(model, opt, dev, model_path) # Load model
+  if model_path is not None:
+    model, opt = custom_utils.load(model, opt, dev, model_path) # Load model
 
   # Based on reference code
   loss_func = nn.functional.cross_entropy # TODO: Add in weight

@@ -69,7 +69,7 @@ input_image_path = sys.argv[2]
 save_path = sys.argv[3]
 
 print(f'Model path: {model_path}')
-config, _start_epoch = custom_utils.open_config(model_path)
+config, _start_epoch, _model_path = custom_utils.open_config(model_path)
 
 device, summary_dev = custom_utils.fetch_device()
 

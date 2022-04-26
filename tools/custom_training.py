@@ -5,7 +5,9 @@
 # TODO: Early stopping
 # TODO: Dynamic lr
 
+# https://colab.research.google.com/github/pytorch/pytorch.github.io/blob/master/assets/hub/pytorch_vision_deeplabv3_resnet101.ipynb
 # https://stackoverflow.com/questions/63892031/how-to-train-deeplabv3-on-custom-dataset-on-pytorch
+
 import sys
 import tqdm
 

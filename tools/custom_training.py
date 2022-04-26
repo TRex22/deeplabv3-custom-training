@@ -22,13 +22,15 @@ print('Custom train deeplabv3 ...')
 
 if len(sys.argv) == 3: # params: model config
   config_path = sys.argv[2]
+  model_path = sys.argv[1]
+  config, start_epoch, _model_path = custom_utils.open_config(config_path)
 elif len(sys.argv) == 2: # params: either model or config
-  config_path= sys.argv[1]
+  config_path = sys.argv[1]
+  config, start_epoch, model_path = custom_utils.open_config(config_path)
 else:
   raise RuntimeError("Invalid Parameters, please add either the model path, config path or both")
 
 print(f'Config/Model path: {config_path}')
-config, start_epoch, model_path = custom_utils.open_config(config_path)
 
 # Used for pre-fetching
 outer_batch_size = config["batch_size"] * config['outer_batch_size_multiplier']
@@ -55,7 +57,6 @@ if __name__ == '__main__':
 
   # Based on reference code
   loss_func = nn.functional.cross_entropy # TODO: Add in weight
-  # Dice Co-Efficient
 
   pbar = tqdm.tqdm(total=config["epochs"])
   for epoch in range(start_epoch, config["epochs"], 1):

@@ -221,10 +221,16 @@ def loss_batch(model, device, scaler, loss_func, xb, yb, opt=None):
   dice_loss = dice_coef(target, output.argmax(1))
 
   sum_batch_iou_score = 0.0
+  sum_dice_loss = 0.0
+
+  # Iterate through batch
+  # TODO: use operators over batch?
   for i in range(output.shape[0]):
     sum_batch_iou_score += compute_iou(output[i], target[i]).cpu()
+    sum_dice_loss += dice_coef(target[i], output.argmax(1)[i])
 
   iou_score = sum_batch_iou_score / output.shape[0]
+  dice_loss = sum_dice_loss / output.shape[0]
 
   del output
   del target
@@ -343,6 +349,7 @@ def compute_iou(output, target):
 
 # https://towardsdatascience.com/choosing-and-customizing-loss-functions-for-image-processing-a0e4bf665b0a
 # https://stackoverflow.com/questions/47084179/how-to-calculate-multi-class-dice-coefficient-for-multiclass-image-segmentation
+# Dice Co-Efficient
 def dice_coef(y_true, y_pred, epsilon=1e-6):
   # Altered Sorensen–Dice coefficient with epsilon for smoothing.
   y_true_flatten = y_true.to(torch.bool)

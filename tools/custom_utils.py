@@ -262,7 +262,7 @@ def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, co
   # TODO: Allow disabling sub-batches
   if opt is None: # Validation
     # Dont use sub-batches
-    for xb, yb in tqdm.tqdm(dataloader):
+    for xb, yb in dataloader:
       loss, dice_loss, iou_score, _opt = loss_batch(model, device, scaler, loss_func, xb, yb, opt=opt)
 
       sum_of_loss += loss

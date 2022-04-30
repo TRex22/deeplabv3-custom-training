@@ -6,7 +6,7 @@
   "outer_batch_size_multiplier": 10, //15, // Used to pre-load data
   "epochs": 10,
   "sample_percentage": 1.0, //0.25 // 0.1 // 1.0
-  "lr": 0.02,
+  "lr": 0.01,
   "momentum": 0.8,
   "beta_1": 0.9,
   "beta_2": 0.999,
@@ -14,7 +14,7 @@
   "weight_decay": 0,
   "amsgrad": false,
   "load_model": false,
-  "opt_function": "ADAM", // "ADAM",
-  "save_path": "/data/trained_models/deeplabv3_resnet50/adam/",
+  "opt_function": "SGD", // "ADAM",
+  "save_path": "/data/trained_models/deeplabv3_resnet50/sgd/",
   "dataset_path": "/data/data/cityscapes/data_raw/"
 }

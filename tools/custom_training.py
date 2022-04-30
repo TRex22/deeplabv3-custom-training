@@ -66,7 +66,7 @@ if __name__ == '__main__':
   pbar = tqdm.tqdm(total=config["epochs"] - start_epoch)
   for epoch in range(start_epoch, config["epochs"], 1):
     pbar.write('Training Phase:')
-    model, opt = custom_utils.train(model, dev, loss_func, lr_scheduler, opt, epoch, config, outer_batch_size, category_list=category_list)
+    model, opt = custom_utils.train(model, dev, loss_func, opt, epoch, config, outer_batch_size, category_list=category_list)
 
     pbar.write('Validation Phase:')
     # If you need to purge memory
@@ -74,9 +74,9 @@ if __name__ == '__main__':
     # time.sleep(30)
     # torch.cuda.empty_cache()
     # torch.cuda.synchronize()
-    custom_utils.validate(model, dev, loss_func, epoch, config, category_list=category_list)
+    custom_utils.validate(model, dev, loss_func, lr_scheduler, epoch, config, category_list=category_list)
 
     pbar.write(f'Save epoch {epoch}.')
-    custom_utils.save(model, opt, epoch, config, save_path)
+    custom_utils.save(model, opt, lr_scheduler, epoch, config, save_path)
 
     pbar.update(1)

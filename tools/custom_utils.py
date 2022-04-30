@@ -200,18 +200,18 @@ def create_folder(path):
   Path(path).mkdir(parents=True, exist_ok=True)
 
 # Built to be compatible with reference code
-def save(model, opt, epoch, config, save_path):
+def save(model, opt, lr_scheduler, epoch, config, save_path):
   checkpoint = {
     "model": model.state_dict(),
     "optimizer": opt.state_dict(),
-    # "lr_scheduler": lr_scheduler.state_dict(),
+    "lr_scheduler": lr_scheduler.state_dict(),
     "epoch": epoch,
     "args": config,
   }
 
   torch.save(checkpoint, os.path.join(save_path, f"model_{epoch}.pth"))
 
-def loss_batch(model, device, scaler, loss_func, xb, yb, opt=None, lr_scheduler=None):
+def loss_batch(model, device, scaler, loss_func, xb, yb, opt=None):
   if opt is not None:
     opt.zero_grad(set_to_none=True) # set_to_none=True here can modestly improve performance
 
@@ -257,10 +257,9 @@ def loss_batch(model, device, scaler, loss_func, xb, yb, opt=None, lr_scheduler=
     scaler.step(opt)
     scaler.update()
 
-  scheduler.step(valid_loss/len(validloader))
   return [loss.cpu().item(), dice_loss, iou_score, opt]
 
-def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, config, opt=None, lr_scheduler=None, save=True):
+def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, config, opt=None, save=True):
   sum_of_loss = 0.0
   sum_of_iou = 0.0
   sum_of_dice = 0.0
@@ -317,21 +316,21 @@ def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, co
 
   return [final_loss, final_iou, opt]
 
-def train(model, device, loss_func, lr_scheduler, opt, epoch, config, outer_batch_size, category_list=None):
+def train(model, device, loss_func, opt, epoch, config, outer_batch_size, category_list=None):
   # Load Data - in train step to save memory
   train_dataset, train_dataloader = load_dataset(config, config['dataset_path'], 'train', category_list=category_list, batch_size=outer_batch_size, sample=True)
 
   model = model.train()
   scaler = torch.cuda.amp.GradScaler(enabled=True)
 
-  final_loss, final_iou, opt = run_loop(model, device, train_dataloader, config["batch_size"], scaler, loss_func, epoch, config, opt=opt, lr_scheduler=lr_scheduler)
+  final_loss, final_iou, opt = run_loop(model, device, train_dataloader, config["batch_size"], scaler, loss_func, epoch, config, opt=opt)
 
   del train_dataloader
   del train_dataset
 
   return [model, opt]
 
-def validate(model, device, loss_func, epoch, config, category_list=None, save=True):
+def validate(model, device, loss_func, lr_scheduler, epoch, config, category_list=None, save=True):
   # Load Data - in val step to save memory
   val_dataset, val_dataloader = load_dataset(config, config['dataset_path'], 'val', category_list=category_list, batch_size=config["val_batch_size"], sample=False)
 
@@ -346,6 +345,9 @@ def validate(model, device, loss_func, epoch, config, category_list=None, save=T
 
   del val_dataloader
   del val_dataset
+
+  # https://pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.ReduceLROnPlateau.html
+  lr_scheduler.step(final_loss) # Use the average val loss for the batch
 
 # Based on: https://towardsdatascience.com/intersection-over-union-iou-calculation-for-evaluating-an-image-segmentation-model-8b22e2e84686
 def compute_iou(output, target):

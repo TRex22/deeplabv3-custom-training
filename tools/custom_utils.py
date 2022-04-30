@@ -316,7 +316,7 @@ def run_loop(model, device, dataloader, batch_size, scaler, loss_func, lr_schedu
 
   return [final_loss, final_iou, opt]
 
-def train(model, device, loss_func, opt, epoch, config, outer_batch_size, category_list=None):
+def train(model, device, loss_func, lr_scheduler, opt, epoch, config, outer_batch_size, category_list=None):
   # Load Data - in train step to save memory
   train_dataset, train_dataloader = load_dataset(config, config['dataset_path'], 'train', category_list=category_list, batch_size=outer_batch_size, sample=True)
 
@@ -346,9 +346,9 @@ def validate(model, device, loss_func, lr_scheduler, epoch, config, category_lis
   del val_dataloader
   del val_dataset
 
-  # TODO: make sure not ADAM!
-  # https://pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.ReduceLROnPlateau.html
-  lr_scheduler.step(final_loss) # Use the average val loss for the batch
+  if config["opt_function"] == 'SGD':
+    # https://pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.ReduceLROnPlateau.html
+    lr_scheduler.step(final_loss) # Use the average val loss for the batch
 
 # Based on: https://towardsdatascience.com/intersection-over-union-iou-calculation-for-evaluating-an-image-segmentation-model-8b22e2e84686
 def compute_iou(output, target):

@@ -265,7 +265,6 @@ def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, co
   sum_of_dice = 0.0
 
   pbar = tqdm.tqdm(total=len(dataloader))
-  curr_lr = optimizer.param_groups[0]["lr"]
 
   # TODO: Allow disabling sub-batches
   if opt is None: # Validation
@@ -283,13 +282,15 @@ def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, co
     final_iou = sum_of_iou / len(dataloader)
     final_dice = sum_of_dice / len(dataloader)
 
-    pbar.write(f'Epoch {epoch} val loss: {final_loss} val IoU: {final_iou} val dice: {final_dice} lr: {curr_lr}')
+    pbar.write(f'Epoch {epoch} val loss: {final_loss} val IoU: {final_iou} val dice: {final_dice}')
 
     if save:
       val_csv_path = f'{config["save_path"]}/val_loss.csv'
       save_csv(val_csv_path, f'{final_loss},{final_iou},{final_dice}')
 
   else: # Use sub-batches / Training
+    curr_lr = opt.param_groups[0]["lr"]
+
     for inner_batch in dataloader:
       for i in range(0, inner_batch[0].shape[0], batch_size):
         xb = inner_batch[0][i:i+batch_size]

@@ -211,7 +211,7 @@ def save(model, opt, epoch, config, save_path):
 
   torch.save(checkpoint, os.path.join(save_path, f"model_{epoch}.pth"))
 
-def loss_batch(model, device, scaler, loss_func, xb, yb, opt=None):
+def loss_batch(model, device, scaler, loss_func, xb, yb, opt=None, lr_scheduler=None):
   if opt is not None:
     opt.zero_grad(set_to_none=True) # set_to_none=True here can modestly improve performance
 
@@ -257,9 +257,10 @@ def loss_batch(model, device, scaler, loss_func, xb, yb, opt=None):
     scaler.step(opt)
     scaler.update()
 
+  scheduler.step(valid_loss/len(validloader))
   return [loss.cpu().item(), dice_loss, iou_score, opt]
 
-def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, config, opt=None, save=True):
+def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, config, opt=None, lr_scheduler=None, save=True):
   sum_of_loss = 0.0
   sum_of_iou = 0.0
   sum_of_dice = 0.0
@@ -294,7 +295,7 @@ def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, co
         xb = inner_batch[0][i:i+batch_size]
         yb = inner_batch[1][i:i+batch_size]
 
-        loss, dice_loss, iou_score, opt = loss_batch(model, device, scaler, loss_func, xb, yb, opt=opt)
+        loss, dice_loss, iou_score, opt = loss_batch(model, device, scaler, loss_func, xb, yb, opt=opt, lr_scheduler=lr_scheduler)
 
         sum_of_loss += loss
         sum_of_iou += iou_score
@@ -306,7 +307,8 @@ def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, co
     final_iou = sum_of_iou / (len(dataloader) * batch_size)
     final_dice = sum_of_dice / (len(dataloader) * batch_size)
 
-    pbar.write(f'Epoch {epoch} train loss: {final_loss} train IoU: {final_iou} train dice: {final_dice}')
+    curr_lr = opt.param_groups[0]['lr']
+    pbar.write(f'Epoch {epoch} train loss: {final_loss} train IoU: {final_iou} train dice: {final_dice} lr: {curr_lr}')
 
     train_csv_path = f'{config["save_path"]}/train_loss.csv'
 
@@ -315,14 +317,14 @@ def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, co
 
   return [final_loss, final_iou, opt]
 
-def train(model, device, loss_func, opt, epoch, config, outer_batch_size, category_list=None):
+def train(model, device, loss_func, lr_scheduler, opt, epoch, config, outer_batch_size, category_list=None):
   # Load Data - in train step to save memory
   train_dataset, train_dataloader = load_dataset(config, config['dataset_path'], 'train', category_list=category_list, batch_size=outer_batch_size, sample=True)
 
   model = model.train()
   scaler = torch.cuda.amp.GradScaler(enabled=True)
 
-  final_loss, final_iou, opt = run_loop(model, device, train_dataloader, config["batch_size"], scaler, loss_func, epoch, config, opt=opt)
+  final_loss, final_iou, opt = run_loop(model, device, train_dataloader, config["batch_size"], scaler, loss_func, epoch, config, opt=opt, lr_scheduler=lr_scheduler)
 
   del train_dataloader
   del train_dataset

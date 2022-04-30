@@ -61,11 +61,12 @@ if __name__ == '__main__':
 
   # Based on reference code
   loss_func = nn.functional.cross_entropy # TODO: Add in weight
+  lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(opt, 'min', patience = 5, min_lr = 0.00001) # TODO: Make configurable
 
   pbar = tqdm.tqdm(total=config["epochs"] - start_epoch)
   for epoch in range(start_epoch, config["epochs"], 1):
     pbar.write('Training Phase:')
-    model, opt = custom_utils.train(model, dev, loss_func, opt, epoch, config, outer_batch_size, category_list=category_list)
+    model, opt = custom_utils.train(model, dev, loss_func, lr_scheduler, opt, epoch, config, outer_batch_size, category_list=category_list)
 
     pbar.write('Validation Phase:')
     # If you need to purge memory

@@ -209,31 +209,36 @@ def save(model, opt, epoch, config, save_path):
   torch.save(checkpoint, os.path.join(save_path, f"model_{epoch}.pth"))
 
 def loss_batch(model, device, scaler, loss_func, xb, yb, opt=None):
-  input = xb.to(device)
-  prediction = model(input)
+  if opt is not None:
+    opt.zero_grad(set_to_none=True) # set_to_none=True here can modestly improve performance
 
-  del input
+  with torch.cuda.amp.autocast(enabled=True, cache_enabled=True): # TODO: cache_enabled
+    input = xb.to(device)
+    prediction = model(input)
 
-  output = prediction['out']
-  target = yb.to(device)
+    del input
 
-  loss = loss_func(output, target, ignore_index=255)
-  dice_loss = dice_coef(target, output.argmax(1))
+    # Compute Loss
+    output = prediction['out']
+    target = yb.to(device)
 
-  sum_batch_iou_score = 0.0
-  sum_dice_loss = 0.0
+    loss = loss_func(output, target, ignore_index=255)
+    dice_loss = dice_coef(target, output.argmax(1))
 
-  # Iterate through batch
-  # TODO: use operators over batch?
-  for i in range(output.shape[0]):
-    sum_batch_iou_score += compute_iou(output[i], target[i]).cpu()
-    sum_dice_loss += dice_coef(target[i], output.argmax(1)[i])
+    sum_batch_iou_score = 0.0
+    sum_dice_loss = 0.0
 
-  iou_score = sum_batch_iou_score / output.shape[0]
-  dice_loss = sum_dice_loss / output.shape[0]
+    # Iterate through batch
+    # TODO: use operators over batch?
+    for i in range(output.shape[0]):
+      sum_batch_iou_score += compute_iou(output[i], target[i]).cpu()
+      sum_dice_loss += dice_coef(target[i], output.argmax(1)[i])
 
-  del output
-  del target
+    iou_score = sum_batch_iou_score / output.shape[0]
+    dice_loss = sum_dice_loss / output.shape[0]
+
+    del output
+    del target
 
   if opt is not None:
     scaler.scale(loss).backward()
@@ -248,7 +253,6 @@ def loss_batch(model, device, scaler, loss_func, xb, yb, opt=None):
 
     scaler.step(opt)
     scaler.update()
-    opt.zero_grad(set_to_none=True) # set_to_none=True here can modestly improve performance
 
   return [loss.cpu().item(), dice_loss, iou_score, opt]
 
@@ -315,8 +319,7 @@ def train(model, device, loss_func, opt, epoch, config, outer_batch_size, catego
   model = model.train()
   scaler = torch.cuda.amp.GradScaler(enabled=True)
 
-  with torch.cuda.amp.autocast(enabled=True, cache_enabled=True): # TODO: cache_enabled
-    final_loss, final_iou, opt = run_loop(model, device, train_dataloader, config["batch_size"], scaler, loss_func, epoch, config, opt=opt)
+  final_loss, final_iou, opt = run_loop(model, device, train_dataloader, config["batch_size"], scaler, loss_func, epoch, config, opt=opt)
 
   del train_dataloader
   del train_dataset

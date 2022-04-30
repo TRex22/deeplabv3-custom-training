@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=citySDG
-#SBATCH --output=/home-mscluster/jchalom/deeplabv3_sgd_result.txt
+#SBATCH --output=/home-mscluster/jchalom/deeplabv3_sgd_cityscapes_result.txt
 #SBATCH --ntasks=1
 #SBATCH --time=2550:00
 #SBATCH --nodes=1 

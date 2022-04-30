@@ -265,6 +265,7 @@ def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, co
   sum_of_dice = 0.0
 
   pbar = tqdm.tqdm(total=len(dataloader))
+  curr_lr = opt.param_groups[0]['lr']
 
   # TODO: Allow disabling sub-batches
   if opt is None: # Validation
@@ -282,7 +283,7 @@ def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, co
     final_iou = sum_of_iou / len(dataloader)
     final_dice = sum_of_dice / len(dataloader)
 
-    pbar.write(f'Epoch {epoch} val loss: {final_loss} val IoU: {final_iou} val dice: {final_dice}')
+    pbar.write(f'Epoch {epoch} val loss: {final_loss} val IoU: {final_iou} val dice: {final_dice} lr: {curr_lr}')
 
     if save:
       val_csv_path = f'{config["save_path"]}/val_loss.csv'
@@ -306,7 +307,6 @@ def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, co
     final_iou = sum_of_iou / (len(dataloader) * batch_size)
     final_dice = sum_of_dice / (len(dataloader) * batch_size)
 
-    curr_lr = opt.param_groups[0]['lr']
     pbar.write(f'Epoch {epoch} train loss: {final_loss} train IoU: {final_iou} train dice: {final_dice} lr: {curr_lr}')
 
     train_csv_path = f'{config["save_path"]}/train_loss.csv'

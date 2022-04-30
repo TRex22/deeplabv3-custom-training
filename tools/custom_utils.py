@@ -259,13 +259,13 @@ def loss_batch(model, device, scaler, loss_func, xb, yb, opt=None):
 
   return [loss.cpu().item(), dice_loss, iou_score, opt]
 
-def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, config, opt=None, save=True):
+def run_loop(model, device, dataloader, batch_size, scaler, loss_func, lr_scheduler, epoch, config, opt=None, save=True):
   sum_of_loss = 0.0
   sum_of_iou = 0.0
   sum_of_dice = 0.0
 
   pbar = tqdm.tqdm(total=len(dataloader))
-  curr_lr = opt.param_groups[0]['lr']
+  curr_lr = lr_scheduler.get_lr()
 
   # TODO: Allow disabling sub-batches
   if opt is None: # Validation
@@ -323,7 +323,7 @@ def train(model, device, loss_func, opt, epoch, config, outer_batch_size, catego
   model = model.train()
   scaler = torch.cuda.amp.GradScaler(enabled=True)
 
-  final_loss, final_iou, opt = run_loop(model, device, train_dataloader, config["batch_size"], scaler, loss_func, epoch, config, opt=opt)
+  final_loss, final_iou, opt = run_loop(model, device, train_dataloader, config["batch_size"], scaler, loss_func, lr_scheduler, epoch, config, opt=opt)
 
   del train_dataloader
   del train_dataset
@@ -341,7 +341,7 @@ def validate(model, device, loss_func, lr_scheduler, epoch, config, category_lis
   sum_of_iou = 0.0
 
   with torch.no_grad():
-    final_loss, final_iou, _opt = run_loop(model, device, val_dataloader, config["val_batch_size"], scaler, loss_func, epoch, config, opt=None, save=save)
+    final_loss, final_iou, _opt = run_loop(model, device, val_dataloader, config["val_batch_size"], scaler, loss_func, lr_scheduler, epoch, config, opt=None, save=save)
 
   del val_dataloader
   del val_dataset

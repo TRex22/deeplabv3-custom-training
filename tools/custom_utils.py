@@ -294,7 +294,7 @@ def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, co
         xb = inner_batch[0][i:i+batch_size]
         yb = inner_batch[1][i:i+batch_size]
 
-        loss, dice_loss, iou_score, opt = loss_batch(model, device, scaler, loss_func, xb, yb, opt=opt, lr_scheduler=lr_scheduler)
+        loss, dice_loss, iou_score, opt = loss_batch(model, device, scaler, loss_func, xb, yb, opt=opt)
 
         sum_of_loss += loss
         sum_of_iou += iou_score

@@ -346,6 +346,7 @@ def validate(model, device, loss_func, lr_scheduler, epoch, config, category_lis
   del val_dataloader
   del val_dataset
 
+  # TODO: make sure not ADAM!
   # https://pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.ReduceLROnPlateau.html
   lr_scheduler.step(final_loss) # Use the average val loss for the batch
 

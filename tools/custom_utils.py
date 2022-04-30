@@ -237,8 +237,8 @@ def loss_batch(model, device, scaler, loss_func, xb, yb, opt=None):
       sum_batch_iou_score += compute_iou(output[i], target[i]).cpu()
       sum_dice_loss += dice_coef(target[i], output.argmax(1)[i])
 
-    iou_score = sum_batch_iou_score / output.shape[0]
-    dice_loss = sum_dice_loss / output.shape[0]
+    iou_score = 1 - (sum_batch_iou_score / output.shape[0])
+    dice_loss = 1 - (sum_dice_loss / output.shape[0])
 
     del output
     del target

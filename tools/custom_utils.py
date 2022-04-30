@@ -173,8 +173,10 @@ def initialise_model(dev, config, pretrained=False, num_classes=21):
   # Reference code uses SGD
   if config["opt_function"] == 'ADAM':
     opt = torch.optim.Adam(model.parameters(), lr=config["lr"], betas=config["betas"], eps=config["epsilon"], weight_decay=config["weight_decay"], amsgrad=config["amsgrad"])
+    print('ADAM Optimizer is selected!')
   else:
     opt = optim.SGD(model.parameters(), lr=config["lr"], momentum=config["momentum"])
+    print('SGD Optimizer is selected!')
 
   return [model, opt]
 

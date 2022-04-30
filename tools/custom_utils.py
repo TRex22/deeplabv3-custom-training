@@ -91,7 +91,8 @@ def load_dataset(config, root, image_set, category_list=None, batch_size=1, samp
 
   sample_size = len(dataset) * config["sample_percentage"]
   if sample:
-    sample_size = len(dataset)
+    if sample_size < batch_size:
+      sample_size = len(dataset)
 
     subset_idex = list(range(int(sample_size))) # TODO: Unload others
     subset = torch.utils.data.Subset(dataset, subset_idex)

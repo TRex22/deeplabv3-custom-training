@@ -88,7 +88,7 @@ def convert_segmentation_to_colour(segmentation_map, label_set='cityscapes'):
 
 print('Generate Segmentation ...')
 
-if len(sys.argv) > 4:
+if len(sys.argv) != 4:
   raise RuntimeError("Invalid Parameters, model_path, input_image_path and save_path are required.")
 
 model_path = sys.argv[1]

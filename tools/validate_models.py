@@ -17,7 +17,7 @@ config = {
 print('Test pretrained models ...')
 
 category_list = custom_utils.fetch_category_list(config)
-dev, _summary_dev = custom_utils.fetch_device()
+device, _summary_dev = custom_utils.fetch_device()
 loss_func = nn.functional.cross_entropy # TODO: Add in weight
 lr_scheduler = None
 
@@ -29,18 +29,18 @@ if len(sys.argv) > 1:
 
   model, opt = custom_utils.initialise_model(device, config, num_classes=len(category_list))
   model, _opt = custom_utils.load(model, opt, device, model_path) # Load model
-  model.to(dev)
+  model.to(device)
 
-  custom_utils.validate(model, dev, loss_func, lr_scheduler, -1, config, category_list=category_list, save=False)
+  custom_utils.validate(model, device, loss_func, lr_scheduler, -1, config, category_list=category_list, save=False)
 else:
   # ResNet50
   print('Validating deeplabv3_resnet50 ...')
   model = models.segmentation.deeplabv3_resnet50(pretrained=True, num_classes=21)
-  model.to(dev)
-  custom_utils.validate(model, dev, loss_func, lr_scheduler, -1, config, category_list=category_list, save=False)
+  model.to(device)
+  custom_utils.validate(model, device, loss_func, lr_scheduler, -1, config, category_list=category_list, save=False)
 
   # ResNet101
   print('Validating deeplabv3_resnet101 ...')
   model = models.segmentation.deeplabv3_resnet101(pretrained=True, num_classes=21)
-  model.to(dev)
-  custom_utils.validate(model, dev, loss_func, lr_scheduler, -1, config, category_list=category_list, save=False)
+  model.to(device)
+  custom_utils.validate(model, device, loss_func, lr_scheduler, -1, config, category_list=category_list, save=False)

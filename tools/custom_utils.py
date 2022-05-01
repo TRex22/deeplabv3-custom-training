@@ -267,6 +267,7 @@ def loss_batch(model, device, scaler, loss_func, xb, yb, opt=None):
     scaler.step(opt)
     scaler.update()
 
+  # Check if loss.detach() is better
   return [loss.cpu().item(), dice_loss, iou_score, opt]
 
 def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, config, opt=None, save=True):

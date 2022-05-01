@@ -109,6 +109,7 @@ if model is None:
   model, opt = custom_utils.initialise_model(device, config, num_classes=len(category_list))
   model, _opt = custom_utils.load(model, opt, device, model_path) # Load model
 
+model = model.to(device)
 model = model.eval()
 
 image = Image.open(input_image_path)

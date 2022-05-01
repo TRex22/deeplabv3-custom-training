@@ -8,7 +8,9 @@
 # https://colab.research.google.com/github/pytorch/pytorch.github.io/blob/master/assets/hub/pytorch_vision_deeplabv3_resnet101.ipynb
 # https://stackoverflow.com/questions/63892031/how-to-train-deeplabv3-on-custom-dataset-on-pytorch
 
+import gc
 import sys
+import time
 import tqdm
 
 import torch
@@ -78,7 +80,7 @@ if __name__ == '__main__':
     pbar.write('Validation Phase:')
     # If you need to purge memory
     gc.collect() # Force the Training data to be unloaded. Loading data takes ~10 secs
-    time.sleep(15) # 30
+    # time.sleep(15) # 30
     torch.cuda.empty_cache()
     torch.cuda.synchronize()
     custom_utils.validate(model, dev, loss_func, lr_scheduler, epoch, config, category_list=category_list)

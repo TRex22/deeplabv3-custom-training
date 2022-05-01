@@ -76,14 +76,12 @@ if __name__ == '__main__':
   for epoch in range(start_epoch, config["epochs"], 1):
     pbar.write('Training Phase:')
     model, opt = custom_utils.train(model, dev, loss_func, lr_scheduler, opt, epoch, config, outer_batch_size, category_list=category_list)
+    custom_utils.clear_gpu()
 
     pbar.write('Validation Phase:')
-    # If you need to purge memory
-    gc.collect() # Force the Training data to be unloaded. Loading data takes ~10 secs
-    # time.sleep(15) # 30
-    torch.cuda.empty_cache()
-    torch.cuda.synchronize()
+    time.sleep(15)
     custom_utils.validate(model, dev, loss_func, lr_scheduler, epoch, config, category_list=category_list)
+    custom_utils.clear_gpu()
 
     pbar.write(f'Save epoch {epoch}.')
     custom_utils.save(model, opt, lr_scheduler, epoch, config, save_path)

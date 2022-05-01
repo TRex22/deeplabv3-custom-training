@@ -29,6 +29,12 @@ import transforms as T
 ################################################################################
 # Helper Methids                                                               #
 ################################################################################
+def clear_gpu():
+  # If you need to purge memory
+  gc.collect() # Force the Training data to be unloaded. Loading data takes ~10 secs
+  # time.sleep(15) # 30
+  torch.cuda.empty_cache()
+  torch.cuda.synchronize()
 
 def fetch(model):
   if model == 'ResNet50':

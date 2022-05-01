@@ -99,11 +99,10 @@ save_path = sys.argv[3]
 print(f'Model path: {model_path}')
 label_set = 'COCO21'
 model = custom_utils.fetch(model_path)
+device, summary_dev = custom_utils.fetch_device()
 
 if model is None:
   config, _start_epoch, _model_path = custom_utils.open_config(model_path)
-  device, summary_dev = custom_utils.fetch_device()
-
   category_list = custom_utils.fetch_category_list(config)
 
   label_set = 'cityscapes'

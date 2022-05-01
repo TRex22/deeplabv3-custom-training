@@ -26,6 +26,7 @@ if len(sys.argv) > 1:
   model_path = sys.argv[1]
   print(f'Validating {model_path} ...')
   config, _start_epoch, _model_path = custom_utils.open_config(model_path)
+  category_list = custom_utils.fetch_category_list(config)
 
   model, opt = custom_utils.initialise_model(device, config, num_classes=len(category_list))
   model, _opt = custom_utils.load(model, opt, device, model_path) # Load model

@@ -103,9 +103,11 @@ device, summary_dev = custom_utils.fetch_device()
 category_list = custom_utils.fetch_category_list(config)
 
 # Attempt to load pre-trained model
+label_set = 'COCO21'
 model = custom_utils.fetch(model_path)
 
 if model is None:
+  label_set = 'cityscapes'
   model, opt = custom_utils.initialise_model(device, config, num_classes=len(category_list))
   model, _opt = custom_utils.load(model, opt, device, model_path) # Load model
 
@@ -116,7 +118,7 @@ input = torchvision.transforms.functional.to_tensor(image).to(device).unsqueeze(
 prediction = model(input)
 
 output = np.transpose(prediction['out'].argmax(1).cpu().numpy())
-segmentation = convert_segmentation_to_colour(output)
+segmentation = convert_segmentation_to_colour(output, label_set=label_set)
 
 torch.save(output, f'{save_path}/raw_output.pth')
 cv2.imwrite(f'{save_path}/segmentation.png', cv2.rotate(segmentation, cv2.ROTATE_90_COUNTERCLOCKWISE))

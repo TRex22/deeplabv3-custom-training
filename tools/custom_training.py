@@ -77,10 +77,10 @@ if __name__ == '__main__':
 
     pbar.write('Validation Phase:')
     # If you need to purge memory
-    # gc.collect() # Force the Training data to be unloaded. Loading data takes ~10 secs
-    # time.sleep(30)
-    # torch.cuda.empty_cache()
-    # torch.cuda.synchronize()
+    gc.collect() # Force the Training data to be unloaded. Loading data takes ~10 secs
+    time.sleep(15) # 30
+    torch.cuda.empty_cache()
+    torch.cuda.synchronize()
     custom_utils.validate(model, dev, loss_func, lr_scheduler, epoch, config, category_list=category_list)
 
     pbar.write(f'Save epoch {epoch}.')

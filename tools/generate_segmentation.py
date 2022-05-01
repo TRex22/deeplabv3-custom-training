@@ -48,20 +48,47 @@ cityscapes_colours = [
   [  0,  0,142]
 ]
 
-def convert_segmentation_to_colour(segmentation_map):
+coco_21_colours = [
+  (0, 0, 0),       # __background__
+  (128, 0, 0),     # person
+  (0, 128, 0),     # bicycle
+  (128, 128, 0),   # car
+  (0, 0, 128),     # motorcycle
+  (128, 0, 128),   # airplane
+  (0, 128, 128),   # bus
+  (128, 128, 128), # train
+  (64, 0, 0),      # truck
+  (192, 0, 0),     # boat
+  (64, 128, 0),    # traffic light
+  (192, 128, 0),   # fire hydrant
+  (64, 0, 128),    # N/A
+  (192, 0, 128),   # stop sign
+  (64, 128, 128),  # parking meter
+  (192, 128, 128), # bench
+  (0, 64, 0),      # bird
+  (128, 64, 0),    # cat
+  (0, 192, 0),     # dog
+  (128, 192, 0),   # horse
+  (0, 64, 128),    # sheep
+]
+
+def convert_segmentation_to_colour(segmentation_map, label_set='cityscapes'):
   width, height = segmentation_map.shape[0:2]
   colour_segmentation_map = np.zeros((segmentation_map.shape[0], segmentation_map.shape[1], 3))
 
   for w in range(width):
     for h in range(height):
-      colour_segmentation_map[w][h] = cityscapes_colours[segmentation_map[w][h][0]]
+      if label_set == 'cityscapes':
+        colour_segmentation_map[w][h] = cityscapes_colours[segmentation_map[w][h][0]]
+      else:
+        colour_segmentation_map[w][h] = coco_21_colours[segmentation_map[w][h][0]]
 
   return colour_segmentation_map
 
 
 print('Generate Segmentation ...')
 
-if len(sys.argv) != 4:
+if len(sys.argv) > 4:
   raise RuntimeError("Invalid Parameters, model_path, input_image_path and save_path are required.")
 
 model_path = sys.argv[1]
@@ -74,9 +101,14 @@ config, _start_epoch, _model_path = custom_utils.open_config(model_path)
 device, summary_dev = custom_utils.fetch_device()
 
 category_list = custom_utils.fetch_category_list(config)
-model, opt = custom_utils.initialise_model(device, config, num_classes=len(category_list))
 
-model, _opt = custom_utils.load(model, opt, device, model_path) # Load model
+# Attempt to load pre-trained model
+model = custom_utils.fetch(model_path)
+
+if model is None:
+  model, opt = custom_utils.initialise_model(device, config, num_classes=len(category_list))
+  model, _opt = custom_utils.load(model, opt, device, model_path) # Load model
+
 model = model.eval()
 
 image = Image.open(input_image_path)

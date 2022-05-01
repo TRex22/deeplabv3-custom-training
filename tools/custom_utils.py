@@ -30,6 +30,14 @@ import transforms as T
 # Helper Methids                                                               #
 ################################################################################
 
+def fetch(model):
+  if model == 'ResNet50':
+    return models.segmentation.deeplabv3_resnet50(pretrained=True, num_classes=21)
+  elif model == 'ResNet101':
+    return models.segmentation.deeplabv3_resnet101(pretrained=True, num_classes=21)
+
+  return None
+
 # Will either open the config path or get config from model checkpoint
 def open_config(path):
   try:

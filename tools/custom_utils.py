@@ -111,9 +111,9 @@ def load_dataset(config, root, image_set, category_list=None, batch_size=1, samp
       dataloader = DataLoader(subset, batch_size=batch_size, shuffle=True, drop_last=True, collate_fn=utils.collate_fn, num_workers=1, pin_memory=True)
   else:
     if config["dataset"] == "cityscapes":
-      dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, drop_last=True, collate_fn=cityscapes_collate, num_workers=1, pin_memory=True)
+      dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, drop_last=True, collate_fn=cityscapes_collate, num_workers=2, pin_memory=True)
     else:
-      dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, drop_last=True, collate_fn=utils.collate_fn, num_workers=1, pin_memory=True)
+      dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, drop_last=True, collate_fn=utils.collate_fn, num_workers=2, pin_memory=True)
 
   # print(f'Number of data points for {image_set}: {len(dataloader)}')
   return [dataset, dataloader]

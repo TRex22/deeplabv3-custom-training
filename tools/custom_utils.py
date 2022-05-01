@@ -91,14 +91,14 @@ def cityscapes_collate(batch):
   # torch.as_tensor(np.array(target), dtype=torch.int32)
   return torch.from_numpy(images), torch.from_numpy(targets)
 
-def load_dataset(config, root, image_set, category_list=None, batch_size=1, sample=False):
+def load_dataset(config, root, image_set, category_list=None, batch_size=1, training=False):
   if config["dataset"] == "COCO16" or config["dataset"] == "COCO21":
     dataset = load_coco(root, image_set, category_list=category_list)
   elif config["dataset"] == "cityscapes":
     dataset = torchvision.datasets.Cityscapes(root, split=image_set, mode='fine', target_type='semantic', transforms=cityscapes_transforms()) # TODO: Cityscapes 'test'
 
   sample_size = len(dataset) * config["sample_percentage"]
-  if sample:
+  if training:
     if sample_size < batch_size:
       sample_size = len(dataset)
 
@@ -330,7 +330,7 @@ def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, co
 
 def train(model, device, loss_func, lr_scheduler, opt, epoch, config, outer_batch_size, category_list=None):
   # Load Data - in train step to save memory
-  train_dataset, train_dataloader = load_dataset(config, config['dataset_path'], 'train', category_list=category_list, batch_size=outer_batch_size, sample=True)
+  train_dataset, train_dataloader = load_dataset(config, config['dataset_path'], 'train', category_list=category_list, batch_size=outer_batch_size, training=True)
 
   model = model.train()
   scaler = torch.cuda.amp.GradScaler(enabled=True)
@@ -344,7 +344,7 @@ def train(model, device, loss_func, lr_scheduler, opt, epoch, config, outer_batc
 
 def validate(model, device, loss_func, lr_scheduler, epoch, config, category_list=None, save=True):
   # Load Data - in val step to save memory
-  val_dataset, val_dataloader = load_dataset(config, config['dataset_path'], 'val', category_list=category_list, batch_size=config["val_batch_size"], sample=False)
+  val_dataset, val_dataloader = load_dataset(config, config['dataset_path'], 'val', category_list=category_list, batch_size=config["val_batch_size"], training=False)
 
   model = model.eval()
   scaler = torch.cuda.amp.GradScaler(enabled=True)

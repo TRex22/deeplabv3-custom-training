@@ -357,7 +357,7 @@ def validate(model, device, loss_func, lr_scheduler, epoch, config, category_lis
   del val_dataloader
   del val_dataset
 
-  if config["opt_function"] == 'SGD':
+  if lr_scheduler is not None and config["opt_function"] == 'SGD':
     # https://pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.ReduceLROnPlateau.html
     lr_scheduler.step(final_loss) # Use the average val loss for the batch
 

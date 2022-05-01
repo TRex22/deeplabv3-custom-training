@@ -19,7 +19,7 @@ print('Test pretrained models ...')
 category_list = custom_utils.fetch_category_list(config)
 dev, _summary_dev = custom_utils.fetch_device()
 loss_func = nn.functional.cross_entropy # TODO: Add in weight
-lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(opt, 'min', patience = 5, min_lr = 0.00001) # TODO: Make configurable
+lr_scheduler = None
 
 # If arg open model
 if len(sys.argv) > 1:

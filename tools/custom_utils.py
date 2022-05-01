@@ -106,9 +106,9 @@ def load_dataset(config, root, image_set, category_list=None, batch_size=1, samp
     subset = torch.utils.data.Subset(dataset, subset_idex)
 
     if config["dataset"] == "cityscapes":
-      dataloader = DataLoader(subset, batch_size=batch_size, shuffle=True, drop_last=True, collate_fn=cityscapes_collate)
+      dataloader = DataLoader(subset, batch_size=batch_size, shuffle=True, drop_last=True, collate_fn=cityscapes_collate, num_workers=1, pin_memory=True)
     else:
-      dataloader = DataLoader(subset, batch_size=batch_size, shuffle=True, drop_last=True, collate_fn=utils.collate_fn)
+      dataloader = DataLoader(subset, batch_size=batch_size, shuffle=True, drop_last=True, collate_fn=utils.collate_fn, num_workers=1, pin_memory=True)
   else:
     if config["dataset"] == "cityscapes":
       dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, drop_last=True, collate_fn=cityscapes_collate)
@@ -221,7 +221,9 @@ def save(model, opt, lr_scheduler, epoch, config, save_path):
 
 def loss_batch(model, device, scaler, loss_func, xb, yb, opt=None):
   if opt is not None:
-    opt.zero_grad(set_to_none=True) # set_to_none=True here can modestly improve performance
+    # opt.zero_grad(set_to_none=True) # set_to_none=True here can modestly improve performance
+    for param in model.parameters(): # Optimisation to save n operations
+      param.grad = None
 
   with torch.cuda.amp.autocast(enabled=True, cache_enabled=True): # TODO: cache_enabled
     input = xb.to(device)

@@ -63,6 +63,13 @@ if __name__ == '__main__':
   loss_func = nn.functional.cross_entropy # TODO: Add in weight
   lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(opt, 'min', patience = 5, min_lr = 0.00001) # TODO: Make configurable
 
+  # Optimisations
+  # https://betterprogramming.pub/how-to-make-your-pytorch-code-run-faster-93079f3c1f7b
+  torch.backends.cudnn.benchmark = True # Initial training steps will be slower
+  torch.autograd.set_detect_anomaly(False)
+  torch.autograd.profiler.profile(False)
+  torch.autograd.profiler.emit_nvtx(False)
+
   pbar = tqdm.tqdm(total=config["epochs"] - start_epoch)
   for epoch in range(start_epoch, config["epochs"], 1):
     pbar.write('Training Phase:')

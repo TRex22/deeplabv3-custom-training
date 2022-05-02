@@ -32,6 +32,9 @@ if len(sys.argv) > 1:
   model, _opt = custom_utils.load(model, opt, device, model_path) # Load model
   model.to(device)
 
+  config["val_batch_size"] = 1
+  config["val_num_workers"] = 1
+
   custom_utils.validate(model, device, loss_func, lr_scheduler, -1, config, category_list=category_list, save=False)
 else:
   # ResNet50

@@ -22,6 +22,5 @@
   "pin_memory": true,
   "train_num_workers": 3,
   "val_num_workers": 2,
-  "cityscapes_mode": "fine", // "coarse"
-  "cityscapes_crop_size": ""
+  "cityscapes_mode": "fine" // "coarse"
 }

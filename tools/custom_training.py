@@ -57,6 +57,49 @@ print(f'start_epoch: {start_epoch}')
 # Load devices
 dev, summary_dev = custom_utils.fetch_device()
 
+def run_epochs_using_val_as_input(start_epoch, model, dev, loss_func, lr_scheduler, opt, config, outer_batch_size, category_list, save_path):
+  pbar = tqdm.tqdm(total=config["epochs"] - start_epoch)
+  for epoch in range(start_epoch, config["epochs"], 1):
+    pbar.write('Training Phase:')
+    model, opt = custom_utils.train(model, dev, loss_func, opt, epoch, config, outer_batch_size, category_list=category_list)
+    custom_utils.clear_gpu() # Needed to ensure no memory loss
+
+    pbar.write('Validation Phase:')
+    # time.sleep(10)
+    custom_utils.validate(model, dev, loss_func, lr_scheduler, epoch, config, category_list=category_list)
+    custom_utils.clear_gpu() # Needed to ensure no memory loss
+
+    pbar.write(f'Save epoch {epoch}.')
+    custom_utils.save(model, opt, lr_scheduler, epoch, config, save_path)
+
+    pbar.update(1)
+
+# Slight optimisation where the clear gpu step happens once
+def run_epochs_with_separate_loops(start_epoch, model, dev, loss_func, lr_scheduler, opt, config, outer_batch_size, category_list, save_path):
+  print('Train and validate separately ...')
+  print('Training Phase:')
+  pbar = tqdm.tqdm(total=config["epochs"] - start_epoch)
+  for epoch in range(start_epoch, config["epochs"], 1):
+    model, opt = custom_utils.train(model, dev, loss_func, opt, epoch, config, outer_batch_size, category_list=category_list)
+    custom_utils.clear_gpu() # Needed to ensure no memory loss
+
+    pbar.write(f'Save epoch {epoch}.')
+    custom_utils.save(model, opt, lr_scheduler, epoch, config, save_path)
+
+    pbar.update(1)
+
+  print('Validation Phase:')
+  custom_utils.clear_gpu() # Needed to ensure no memory loss
+  pbar = tqdm.tqdm(total=config["epochs"] - start_epoch)
+  for epoch in range(start_epoch, config["epochs"], 1):
+    path = f'{save_path}/model_{epoch}.pth'
+    model, _opt = custom_utils.load(model, opt, dev, path, show_stats=False)
+
+    custom_utils.validate(model, dev, loss_func, lr_scheduler, epoch, config, category_list=category_list)
+
+    custom_utils.clear_gpu() # Needed to ensure no memory loss
+    pbar.update(1)
+
 if __name__ == '__main__':
   try:
     torch.multiprocessing.set_start_method('spawn')
@@ -74,21 +117,7 @@ if __name__ == '__main__':
 
   if config['opt_function'] != 'ADAM': # Since ADAM uses the single lr as the upper bound, we probably dont want that to decay
     lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(opt, 'min', patience = 5, min_lr = 0.00001) # TODO: Make configurable
+    run_epochs_using_val_as_input(start_epoch, model, dev, loss_func, lr_scheduler, opt, config, outer_batch_size, category_list, save_path)
   else:
     lr_scheduler = None
-
-  pbar = tqdm.tqdm(total=config["epochs"] - start_epoch)
-  for epoch in range(start_epoch, config["epochs"], 1):
-    pbar.write('Training Phase:')
-    model, opt = custom_utils.train(model, dev, loss_func, opt, epoch, config, outer_batch_size, category_list=category_list)
-    custom_utils.clear_gpu() # Needed to ensure no memory loss
-
-    pbar.write('Validation Phase:')
-    # time.sleep(10)
-    custom_utils.validate(model, dev, loss_func, lr_scheduler, epoch, config, category_list=category_list)
-    custom_utils.clear_gpu() # Needed to ensure no memory loss
-
-    pbar.write(f'Save epoch {epoch}.')
-    custom_utils.save(model, opt, lr_scheduler, epoch, config, save_path)
-
-    pbar.update(1)
+    run_epochs_with_separate_loops(start_epoch, model, dev, loss_func, lr_scheduler, opt, config, outer_batch_size, category_list, save_path)

@@ -36,6 +36,7 @@ def clear_gpu():
   # torch.cuda.empty_cache() # Will nuke the model in-memory
   torch.cuda.synchronize() # Force the unload before the next step
 
+# Used to load pre-trained models or return None (So we can construct the new ones)
 def fetch(model):
   if model == 'ResNet50':
     return models.segmentation.deeplabv3_resnet50(pretrained=True, num_classes=21)
@@ -203,7 +204,7 @@ def initialise_model(dev, config, pretrained=False, num_classes=21):
 
   return [model, opt]
 
-def load(model, opt, device, path):
+def load(model, opt, device, path, show_stats=True):
   # Load model weights
   # Training crashed when lr dropped to complex numbers
 
@@ -215,7 +216,9 @@ def load(model, opt, device, path):
   model.to(device)
 
   print(f'Model loaded into {device}!')
-  model_stats = summary(model, device=device)
+
+  if show_stats:
+    model_stats = summary(model, device=device)
 
   return model, opt
 

@@ -121,7 +121,7 @@ model = model.to(device)
 model = model.eval()
 
 preprocess = transforms.Compose([
-  transforms.Resize(460), # 480 # 513 # 520
+  transforms.Resize(640), # 480 # 513 # 520
   # transforms.ToTensor(),
   transforms.PILToTensor(),
   transforms.ConvertImageDtype(torch.float),

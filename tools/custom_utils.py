@@ -399,7 +399,7 @@ def compute_iou(output, target):
 # https://towardsdatascience.com/choosing-and-customizing-loss-functions-for-image-processing-a0e4bf665b0a
 # https://stackoverflow.com/questions/47084179/how-to-calculate-multi-class-dice-coefficient-for-multiclass-image-segmentation
 # Dice Co-Efficient
-def dice_coef(y_true, y_pred, epsilon=1e-6):
+def dice_coef(y_true, y_pred, epsilon=1e-4): # 1e-6 wont work for float16
   # Altered Sorensen–Dice coefficient with epsilon for smoothing.
   y_true_flatten = y_true.to(torch.bool)
   y_pred_flatten = y_pred.to(torch.bool)

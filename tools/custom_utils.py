@@ -74,6 +74,7 @@ def save_csv(file_path, csv_data):
   with open(file_path, 'a') as f:
     f.write(f'{csv_data}\n')
 
+# https://discuss.pytorch.org/t/normalising-images-in-cityscapes-using-mean-and-std-of-imagenet/120556
 def cityscapes_transforms():
   mean = (0.485, 0.456, 0.406) # Taken from COCO reference
   std = (0.229, 0.224, 0.225)
@@ -81,7 +82,7 @@ def cityscapes_transforms():
   # https://stackoverflow.com/questions/49356743/how-to-train-tensorflows-deeplab-model-on-cityscapes
   transforms_arr = T.Compose(
     [
-      T.RandomCrop(480), # 513 # 520
+      T.RandomCrop(460), # 480 # 513 # 520
       T.PILToTensor(),
       T.ConvertImageDtype(torch.float),
       T.Normalize(mean=mean, std=std),

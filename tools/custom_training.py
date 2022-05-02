@@ -28,35 +28,8 @@ torch.autograd.profiler.profile(False)
 torch.autograd.profiler.emit_nvtx(False)
 
 ################################################################################
-# Main Thread                                                                  #
+# Training Strategies                                                          #
 ################################################################################
-print('Custom train deeplabv3 ...')
-
-if len(sys.argv) == 3: # params: model config
-  config_path = sys.argv[2]
-  model_path = sys.argv[1]
-  config, start_epoch, _model_path = custom_utils.open_config(config_path)
-  start_epoch = torch.load(model_path)['epoch'] + 1
-elif len(sys.argv) == 2: # params: either model or config
-  config_path = sys.argv[1]
-  config, start_epoch, model_path = custom_utils.open_config(config_path)
-else:
-  raise RuntimeError("Invalid Parameters, please add either the model path, config path or both")
-
-print(f'Config/Model path: {config_path}')
-
-# Used for pre-fetching
-outer_batch_size = config["batch_size"] * config['outer_batch_size_multiplier']
-betas = (config["beta_1"], config["beta_2"])
-config["betas"] = betas
-save_path = config["save_path"]
-
-print(f'Config: {config}')
-print(f'start_epoch: {start_epoch}')
-
-# Load devices
-dev, summary_dev = custom_utils.fetch_device()
-
 def run_epochs_using_val_as_input(start_epoch, model, dev, loss_func, lr_scheduler, opt, config, outer_batch_size, category_list, save_path):
   pbar = tqdm.tqdm(total=config["epochs"] - start_epoch)
   for epoch in range(start_epoch, config["epochs"], 1):
@@ -100,7 +73,37 @@ def run_epochs_with_separate_loops(start_epoch, model, dev, loss_func, lr_schedu
     custom_utils.clear_gpu() # Needed to ensure no memory loss
     pbar.update(1)
 
+################################################################################
+# Main Thread                                                                  #
+################################################################################
 if __name__ == '__main__':
+  print('Custom train deeplabv3 ...')
+
+  if len(sys.argv) == 3: # params: model config
+    config_path = sys.argv[2]
+    model_path = sys.argv[1]
+    config, start_epoch, _model_path = custom_utils.open_config(config_path)
+    start_epoch = torch.load(model_path)['epoch'] + 1
+  elif len(sys.argv) == 2: # params: either model or config
+    config_path = sys.argv[1]
+    config, start_epoch, model_path = custom_utils.open_config(config_path)
+  else:
+    raise RuntimeError("Invalid Parameters, please add either the model path, config path or both")
+
+  print(f'Config/Model path: {config_path}')
+
+  # Used for pre-fetching
+  outer_batch_size = config["batch_size"] * config['outer_batch_size_multiplier']
+  betas = (config["beta_1"], config["beta_2"])
+  config["betas"] = betas
+  save_path = config["save_path"]
+
+  print(f'Config: {config}')
+  print(f'start_epoch: {start_epoch}')
+
+  # Load devices
+  dev, summary_dev = custom_utils.fetch_device()
+
   try:
     torch.multiprocessing.set_start_method('spawn')
   except RuntimeError:

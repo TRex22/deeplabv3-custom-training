@@ -78,9 +78,10 @@ def cityscapes_transforms():
   mean = (0.485, 0.456, 0.406) # Taken from COCO reference
   std = (0.229, 0.224, 0.225)
 
+  # https://stackoverflow.com/questions/49356743/how-to-train-tensorflows-deeplab-model-on-cityscapes
   transforms_arr = T.Compose(
     [
-      T.RandomCrop(520),
+      T.RandomCrop(480), # 513 # 520
       T.PILToTensor(),
       T.ConvertImageDtype(torch.float),
       T.Normalize(mean=mean, std=std),
@@ -137,7 +138,8 @@ def fetch_category_list(config):
   elif config["dataset"] == "COCO21":
     return [0, 5, 2, 16, 9, 44, 6, 3, 17, 62, 21, 67, 18, 19, 4, 1, 64, 20, 63, 7, 72] # Original List
   elif config["dataset"] == "cityscapes":
-    return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, -1] # Cityscapes
+    # return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, -1] # Cityscapes
+    return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33] # Cityscapes
 
 # COCO Dataset
 # train_image_path = '/data/data/coco/data_raw/train2017'
@@ -176,7 +178,8 @@ def fetch_device():
 
 def xavier_uniform_init(layer):
   if type(layer) == nn.Linear or type(layer) == nn.Conv2d:
-    nn.init.xavier_uniform_(layer.weight)
+    gain = nn.init.calculate_gain('relu')
+    nn.init.xavier_uniform_(layer.weight, gain=gain)
 
 def initialise_model(dev, config, pretrained=False, num_classes=21):
   if config["selected_model"] == 'deeplabv3_resnet101':

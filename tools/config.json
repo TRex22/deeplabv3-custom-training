@@ -2,9 +2,9 @@
   "selected_model": "deeplabv3_resnet101", //"deeplabv3_resnet50", // "deeplabv3_resnet101"
   "dataset": "cityscapes", // "COCO16", "COCO21"
   "opt_function": "ADAM", //"SGD", // "ADAM",
-  "batch_size": 10,
+  "batch_size": 8,
   "val_batch_size": 4, // 1 // 8 // Val is not cropped // 1 seems to be the fastest
-  "outer_batch_size_multiplier": 10, //15, // Used to pre-load data
+  "outer_batch_size_multiplier": 15, //15, // Used to pre-load data
   "epochs": 100,
   "sample_percentage": 1.0, //0.25 // 0.1 // 1.0
   "lr": 0.01, // Will change over time

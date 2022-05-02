@@ -22,5 +22,5 @@
   "drop_last": true,
   "pin_memory": true,
   "train_num_workers": 1,
-  "val_num_workers": 2, // Validation is smaller images so can fit more in-memory
+  "val_num_workers": 2 // Validation is smaller images so can fit more in-memory
 }

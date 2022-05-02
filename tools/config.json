@@ -16,5 +16,11 @@
   "amsgrad": true, // To attempt to fix convergence issues
   "load_model": false,
   "save_path": "/data/trained_models/deeplabv3_resnet50/adam/",
-  "dataset_path": "/data/data/cityscapes/data_raw/"
+  "dataset_path": "/data/data/cityscapes/data_raw/",
+  "cityscapes_mode": "fine", // "coarse"
+  "shuffle": true,
+  "drop_last": true,
+  "pin_memory": true,
+  "train_num_workers": 1,
+  "val_num_workers": 2, // Validation is smaller images so can fit more in-memory
 }

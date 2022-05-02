@@ -33,8 +33,8 @@ def clear_gpu():
   # If you need to purge memory
   gc.collect() # Force the Training data to be unloaded. Loading data takes ~10 secs
   # time.sleep(15) # 30
-  # torch.cuda.empty_cache()
-  torch.cuda.synchronize()
+  # torch.cuda.empty_cache() # Will nuke the model in-memory
+  torch.cuda.synchronize() # Force the unload before the next step
 
 def fetch(model):
   if model == 'ResNet50':
@@ -97,19 +97,17 @@ def undo_rescale_pixels(image, scale=1./255.):
 def cityscapes_collate(batch):
   images, targets = list(zip(*batch))
 
-  # images = np.array([(rescale_pixels(i.numpy())) for i in images])
+  # images = np.array([(rescale_pixels(i.numpy())) for i in images]) # Cant rescale if want to maintain compatibility
   images = np.array([(i.numpy()) for i in images])
   targets = np.array([(t.numpy()) for t in targets])
 
-  # torch.as_tensor(np.array(target), dtype=torch.int32)
   return torch.from_numpy(images), torch.from_numpy(targets)
 
 def load_dataset(config, root, image_set, category_list=None, batch_size=1, training=False):
   if config["dataset"] == "COCO16" or config["dataset"] == "COCO21":
     dataset = load_coco(root, image_set, category_list=category_list)
-  elif config["dataset"] == "cityscapes": # TODO: coarse mode
-    # dataset = torchvision.datasets.Cityscapes(root, split=image_set, mode='coarse', target_type='semantic', transforms=cityscapes_transforms()) # TODO: Cityscapes 'test'
-    dataset = torchvision.datasets.Cityscapes(root, split=image_set, mode='fine', target_type='semantic', transforms=cityscapes_transforms()) # TODO: Cityscapes 'test'
+  elif config["dataset"] == "cityscapes":
+    dataset = torchvision.datasets.Cityscapes(root, split=image_set, mode=config["cityscapes_mode"], target_type='semantic', transforms=cityscapes_transforms()) # TODO: Cityscapes 'test'
 
   sample_size = len(dataset) * config["sample_percentage"]
   if training:
@@ -120,14 +118,14 @@ def load_dataset(config, root, image_set, category_list=None, batch_size=1, trai
     subset = torch.utils.data.Subset(dataset, subset_idex)
 
     if config["dataset"] == "cityscapes":
-      dataloader = DataLoader(subset, batch_size=batch_size, shuffle=True, drop_last=True, collate_fn=cityscapes_collate, num_workers=1, pin_memory=True)
+      dataloader = DataLoader(subset, batch_size=batch_size, shuffle=config["shuffle"], drop_last=config["drop_last"], collate_fn=cityscapes_collate, num_workers=config["train_num_workers"], pin_memory=config["pin_memory"])
     else:
-      dataloader = DataLoader(subset, batch_size=batch_size, shuffle=True, drop_last=True, collate_fn=utils.collate_fn, num_workers=1, pin_memory=True)
+      dataloader = DataLoader(subset, batch_size=batch_size, shuffle=config["shuffle"], drop_last=config["drop_last"], collate_fn=utils.collate_fn, num_workers=config["train_num_workers"], pin_memory=config["pin_memory"])
   else:
     if config["dataset"] == "cityscapes":
-      dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, drop_last=True, collate_fn=cityscapes_collate, num_workers=2, pin_memory=True)
+      dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=config["shuffle"], drop_last=config["drop_last"], collate_fn=cityscapes_collate, num_workers=config["val_num_workers"], pin_memory=config["pin_memory"])
     else:
-      dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, drop_last=True, collate_fn=utils.collate_fn, num_workers=2, pin_memory=True)
+      dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=config["shuffle"], drop_last=config["drop_last"], collate_fn=utils.collate_fn, num_workers=config["val_num_workers"], pin_memory=config["pin_memory"])
 
   # print(f'Number of data points for {image_set}: {len(dataloader)}')
   return [dataset, dataloader]

@@ -19,9 +19,17 @@ from torch import nn
 import custom_utils
 
 ################################################################################
+# Optimisations                                                                #
+################################################################################
+# https://betterprogramming.pub/how-to-make-your-pytorch-code-run-faster-93079f3c1f7b
+torch.backends.cudnn.benchmark = True # Initial training steps will be slower
+torch.autograd.set_detect_anomaly(False)
+torch.autograd.profiler.profile(False)
+torch.autograd.profiler.emit_nvtx(False)
+
+################################################################################
 # Main Thread                                                                  #
 ################################################################################
-
 print('Custom train deeplabv3 ...')
 
 if len(sys.argv) == 3: # params: model config
@@ -63,25 +71,22 @@ if __name__ == '__main__':
 
   # Based on reference code
   loss_func = nn.functional.cross_entropy # TODO: Add in weight
-  lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(opt, 'min', patience = 5, min_lr = 0.00001) # TODO: Make configurable
 
-  # Optimisations
-  # https://betterprogramming.pub/how-to-make-your-pytorch-code-run-faster-93079f3c1f7b
-  torch.backends.cudnn.benchmark = True # Initial training steps will be slower
-  torch.autograd.set_detect_anomaly(False)
-  torch.autograd.profiler.profile(False)
-  torch.autograd.profiler.emit_nvtx(False)
+  if config['opt_function'] != 'ADAM': # Since ADAM uses the single lr as the upper bound, we probably dont want that to decay
+    lr_scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(opt, 'min', patience = 5, min_lr = 0.00001) # TODO: Make configurable
+  else:
+    lr_scheduler = None
 
   pbar = tqdm.tqdm(total=config["epochs"] - start_epoch)
   for epoch in range(start_epoch, config["epochs"], 1):
     pbar.write('Training Phase:')
-    model, opt = custom_utils.train(model, dev, loss_func, lr_scheduler, opt, epoch, config, outer_batch_size, category_list=category_list)
-    custom_utils.clear_gpu()
+    model, opt = custom_utils.train(model, dev, loss_func, opt, epoch, config, outer_batch_size, category_list=category_list)
+    custom_utils.clear_gpu() # Needed to ensure no memory loss
 
     pbar.write('Validation Phase:')
-    time.sleep(15)
+    # time.sleep(10)
     custom_utils.validate(model, dev, loss_func, lr_scheduler, epoch, config, category_list=category_list)
-    custom_utils.clear_gpu()
+    custom_utils.clear_gpu() # Needed to ensure no memory loss
 
     pbar.write(f'Save epoch {epoch}.')
     custom_utils.save(model, opt, lr_scheduler, epoch, config, save_path)

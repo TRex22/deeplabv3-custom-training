@@ -13,7 +13,7 @@ from torch.utils.data import DataLoader
 
 import tqdm
 
-import torchvision.transforms as transforms
+# import torchvision.transforms as transforms
 from torchvision import models
 from torchinfo import summary
 
@@ -33,7 +33,7 @@ def clear_gpu():
   # If you need to purge memory
   gc.collect() # Force the Training data to be unloaded. Loading data takes ~10 secs
   # time.sleep(15) # 30
-  torch.cuda.empty_cache()
+  # torch.cuda.empty_cache()
   torch.cuda.synchronize()
 
 def fetch(model):
@@ -88,9 +88,16 @@ def cityscapes_transforms():
 
   return transforms_arr
 
+def rescale_pixels(image, scale=1./255.):
+  return image * scale
+
+def undo_rescale_pixels(image, scale=1./255.):
+  return image * (1/scale)
+
 def cityscapes_collate(batch):
   images, targets = list(zip(*batch))
 
+  # images = np.array([(rescale_pixels(i.numpy())) for i in images])
   images = np.array([(i.numpy()) for i in images])
   targets = np.array([(t.numpy()) for t in targets])
 
@@ -100,7 +107,8 @@ def cityscapes_collate(batch):
 def load_dataset(config, root, image_set, category_list=None, batch_size=1, training=False):
   if config["dataset"] == "COCO16" or config["dataset"] == "COCO21":
     dataset = load_coco(root, image_set, category_list=category_list)
-  elif config["dataset"] == "cityscapes":
+  elif config["dataset"] == "cityscapes": # TODO: coarse mode
+    # dataset = torchvision.datasets.Cityscapes(root, split=image_set, mode='coarse', target_type='semantic', transforms=cityscapes_transforms()) # TODO: Cityscapes 'test'
     dataset = torchvision.datasets.Cityscapes(root, split=image_set, mode='fine', target_type='semantic', transforms=cityscapes_transforms()) # TODO: Cityscapes 'test'
 
   sample_size = len(dataset) * config["sample_percentage"]
@@ -185,9 +193,12 @@ def initialise_model(dev, config, pretrained=False, num_classes=21):
   model = model.to(dev)
 
   # Reference code uses SGD
+  # https://www.programmersought.com/article/22245145270/
   if config["opt_function"] == 'ADAM':
     opt = torch.optim.Adam(model.parameters(), lr=config["lr"], betas=config["betas"], eps=config["epsilon"], weight_decay=config["weight_decay"], amsgrad=config["amsgrad"])
     print('ADAM Optimizer is selected!')
+  # if config["opt_function"] == 'RMSprop':
+    # https://towardsdatascience.com/understanding-rmsprop-faster-neural-network-learning-62e116fcf29a
   else:
     opt = optim.SGD(model.parameters(), lr=config["lr"], momentum=config["momentum"])
     print('SGD Optimizer is selected!')
@@ -218,10 +229,12 @@ def save(model, opt, lr_scheduler, epoch, config, save_path):
   checkpoint = {
     "model": model.state_dict(),
     "optimizer": opt.state_dict(),
-    "lr_scheduler": lr_scheduler.state_dict(),
     "epoch": epoch,
     "args": config,
   }
+
+  if lr_scheduler is not None:
+    checkpoint["lr_scheduler"] = lr_scheduler.state_dict()
 
   torch.save(checkpoint, os.path.join(save_path, f"model_{epoch}.pth"))
 
@@ -245,16 +258,16 @@ def loss_batch(model, device, scaler, loss_func, xb, yb, opt=None):
     dice_loss = dice_coef(target, output.argmax(1))
 
     sum_batch_iou_score = 0.0
-    sum_dice_loss = 0.0
+    # sum_dice_loss = 0.0
 
     # Iterate through batch
     # TODO: use operators over batch?
     for i in range(output.shape[0]):
-      sum_batch_iou_score += compute_iou(output[i], target[i]).cpu()
-      sum_dice_loss += dice_coef(target[i], output.argmax(1)[i])
+      sum_batch_iou_score += compute_iou(output[i], target[i]).detach() # .cpu()
+      # sum_dice_loss += dice_coef(target[i], output.argmax(1)[i])
 
-    iou_score = 1 - (sum_batch_iou_score / output.shape[0])
-    dice_loss = 1 - (sum_dice_loss / output.shape[0])
+    iou_score = (sum_batch_iou_score / output.shape[0]) # 1 -
+    # dice_loss = (sum_dice_loss / output.shape[0]) # 1 -
 
     del output
     del target
@@ -274,7 +287,8 @@ def loss_batch(model, device, scaler, loss_func, xb, yb, opt=None):
     scaler.update()
 
   # Check if loss.detach() is better
-  return [loss.cpu().item(), dice_loss, iou_score, opt]
+  # cpu().item()
+  return [loss.detach(), dice_loss, iou_score, opt]
 
 def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, config, opt=None, save=True):
   sum_of_loss = 0.0
@@ -334,7 +348,7 @@ def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, co
 
   return [final_loss, final_iou, opt]
 
-def train(model, device, loss_func, lr_scheduler, opt, epoch, config, outer_batch_size, category_list=None):
+def train(model, device, loss_func, opt, epoch, config, outer_batch_size, category_list=None):
   # Load Data - in train step to save memory
   train_dataset, train_dataloader = load_dataset(config, config['dataset_path'], 'train', category_list=category_list, batch_size=outer_batch_size, training=True)
 

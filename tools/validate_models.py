@@ -22,10 +22,26 @@ loss_func = nn.functional.cross_entropy # TODO: Add in weight
 lr_scheduler = None
 
 # If arg open model
-if len(sys.argv) > 1:
+if len(sys.argv) == 2:
   model_path = sys.argv[1]
   print(f'Validating {model_path} ...')
   config, _start_epoch, _model_path = custom_utils.open_config(model_path)
+  category_list = custom_utils.fetch_category_list(config)
+
+  model, opt = custom_utils.initialise_model(device, config, num_classes=len(category_list))
+  model, _opt = custom_utils.load(model, opt, device, model_path) # Load model
+  model.to(device)
+
+  config["val_batch_size"] = 1
+  config["val_num_workers"] = 1
+
+  custom_utils.validate(model, device, loss_func, lr_scheduler, -1, config, category_list=category_list, save=False)
+elif len(sys.argv) == 3:
+  model_path = sys.argv[1]
+  config_path = sys.argv[2]
+
+  print(f'Validating {model_path} ...')
+  config, _start_epoch, _model_path = custom_utils.open_config(config_path)
   category_list = custom_utils.fetch_category_list(config)
 
   model, opt = custom_utils.initialise_model(device, config, num_classes=len(category_list))

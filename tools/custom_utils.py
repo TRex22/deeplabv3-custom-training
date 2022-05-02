@@ -192,7 +192,6 @@ def initialise_model(dev, config, pretrained=False, num_classes=21):
 
   # Randomise weights
   model.apply(xavier_uniform_init)
-
   model = model.to(dev)
 
   # Reference code uses SGD

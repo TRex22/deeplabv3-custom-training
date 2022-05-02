@@ -1,7 +1,10 @@
 import sys
 import cv2
+import re
+
 import torch
 import torchvision
+import torchvision.transforms as transforms
 
 import numpy as np
 from PIL import Image
@@ -104,6 +107,12 @@ if model is None:
   config, _start_epoch, _model_path = custom_utils.open_config(model_path)
   category_list = custom_utils.fetch_category_list(config)
 
+  config["batch_size"] = 1
+  config["val_batch_size"] = 1
+  config["val_num_workers"] = 1
+  config["train_num_workers"] = 0
+  config["val_num_workers"] = 0
+
   label_set = 'cityscapes'
   model, opt = custom_utils.initialise_model(device, config, num_classes=len(category_list))
   model, _opt = custom_utils.load(model, opt, device, model_path) # Load model
@@ -111,12 +120,33 @@ if model is None:
 model = model.to(device)
 model = model.eval()
 
-image = Image.open(input_image_path)
-input = torchvision.transforms.functional.to_tensor(image).to(device).unsqueeze(0)
+preprocess = transforms.Compose([
+  transforms.Resize(460), # 480 # 513 # 520
+  # transforms.ToTensor(),
+  transforms.PILToTensor(),
+  transforms.ConvertImageDtype(torch.float),
+  transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+])
+
+img = Image.open(input_image_path).convert('RGB')
+image_shape = np.array(img).shape
+input = preprocess(img).to(device).unsqueeze(0)
+
+img.close()
+
+# input = torchvision.transforms.functional.to_tensor(image).to(device).unsqueeze(0)
 prediction = model(input)
 
 output = np.transpose(prediction['out'].argmax(1).cpu().numpy())
 segmentation = convert_segmentation_to_colour(output, label_set=label_set)
 
 torch.save(output, f'{save_path}/raw_output.pth')
-cv2.imwrite(f'{save_path}/segmentation.png', cv2.rotate(segmentation, cv2.ROTATE_90_COUNTERCLOCKWISE))
+
+output_image = cv2.rotate(segmentation, cv2.ROTATE_90_COUNTERCLOCKWISE)
+output_image = cv2.flip(output_image, 0)
+output_image = cv2.resize(output_image, (image_shape[1], image_shape[0]), cv2.INTER_NEAREST) # INTER_NEAREST for segmentations
+
+filename = input_image_path.split('.')[0].split('/')[-1]
+cv2.imwrite(f'{save_path}/{filename}_segmentation.png', output_image)
+
+print('Complete!')

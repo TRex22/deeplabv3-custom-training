@@ -69,8 +69,8 @@ def run_epochs_with_separate_loops(start_epoch, model, dev, loss_func, lr_schedu
     model, _opt = custom_utils.load(model, opt, dev, path, show_stats=False)
 
     custom_utils.validate(model, dev, loss_func, lr_scheduler, epoch, config, category_list=category_list)
-
     custom_utils.clear_gpu() # Needed to ensure no memory loss
+
     pbar.update(1)
 
 ################################################################################

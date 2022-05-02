@@ -20,7 +20,7 @@
   "shuffle": true,
   "drop_last": true,
   "pin_memory": true,
-  "train_num_workers": 3,
-  "val_num_workers": 2,
+  "train_num_workers": 4,
+  "val_num_workers": 4,
   "cityscapes_mode": "fine" // "coarse"
 }

@@ -13,9 +13,30 @@ My aim is to train on the main cityscapes train dataset as well as combine it wi
 import torch
 from torchvision import models
 
-models.segmentation.deeplabv3_resnet50(pretrained=False, num_classes=num_classes)
-models.segmentation.deeplabv3_resnet101(pretrained=False, num_classes=num_classes)
+# Choose the model with the backbone you want (make sure you load the correct weights for the correct backbone)
+model = models.segmentation.deeplabv3_resnet50(pretrained=False, num_classes=num_classes)
+model = models.segmentation.deeplabv3_resnet101(pretrained=False, num_classes=num_classes)
+
+# If using the exported model (not a checkpoint)
+model_weights = torch.load(path_to_model_weight)
+
+# If using a checkpoint
+model_weights = torch.load(path_to_model_weight)['model']
+
+# Load in the weights
+model = model.load_state_dict(model_weights, strict=False)
+
+# If you want to load model to a specific device like a GPU
+model.to(device)
+
+# If you want to use the model in evaluation mode
+model = model.eval()
+
+# Do stuff ...
 ```
+
+# Optimisations made
+
 
 # TODO
 - [] Train on CityScapes (±600 epochs)

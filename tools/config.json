@@ -1,10 +1,10 @@
 {
-  "selected_model": "deeplabv3_resnet101", //"deeplabv3_resnet50", // "deeplabv3_resnet101"
+  "selected_model": "deeplabv3_resnet50", //"deeplabv3_resnet50", // "deeplabv3_resnet101"
   "dataset": "cityscapes", // "COCO16", "COCO21"
   "opt_function": "ADAM", //"SGD", // "ADAM",
-  "batch_size": 8,
+  "batch_size": 15,
   "val_batch_size": 4, // 1 // 8 // Val is not cropped // 1 seems to be the fastest
-  "outer_batch_size_multiplier": 15, //15, // Used to pre-load data
+  "outer_batch_size_multiplier": 10, //15, // Used to pre-load data
   "epochs": 100,
   "sample_percentage": 1.0, //0.25 // 0.1 // 1.0
   "lr": 0.01, // Will change over time
@@ -15,12 +15,12 @@
   "weight_decay": 0,
   "amsgrad": true, // To attempt to fix convergence issues
   "load_model": false,
-  "save_path": "/data/trained_models/deeplabv3_resnet101/adam/", // "/data/trained_models/deeplabv3_resnet50/adam/",
-  "dataset_path": "/mnt/scratch_disk/data/cityscapes/data_raw/", // "/data/data/cityscapes/data_raw/",
+  "save_path": "/data/trained_models/deeplabv3_resnet50/adam/", // "/data/trained_models/deeplabv3_resnet101/adam/", // "/data/trained_models/deeplabv3_resnet50/adam/",
+  "dataset_path": "/data/data/cityscapes/data_raw/", // "/mnt/scratch_disk/data/cityscapes/raw/", // "/data/data/cityscapes/data_raw/",
   "shuffle": true,
   "drop_last": true,
   "pin_memory": true,
-  "train_num_workers": 3, // 4 for resnet50
-  "val_num_workers": 3, // 4 for resnet50
+  "train_num_workers": 4, //3, // 4 for resnet50
+  "val_num_workers": 4, //3, // 4 for resnet50
   "cityscapes_mode": "fine" // "coarse"
 }

@@ -1,10 +1,25 @@
 # deeplabv3-custom-training
 This repo exists to train the pyTorch Torchvision deeplabv3 models with custom labels and datasets.
-I could not find a good set of trained models online so I decided to train my own
+
+I could not find a good set of trained models online so I decided to train my own.
+
+My aim is to train on the main cityscapes train dataset as well as combine it with the from_games dataset to attempt to improve and generalise the performance of the models.
+
+# Usage of pre-trained models
+1. Download the trained model `.pth`
+2. In your code:
+
+```python
+import torch
+from torchvision import models
+
+models.segmentation.deeplabv3_resnet50(pretrained=False, num_classes=num_classes)
+models.segmentation.deeplabv3_resnet101(pretrained=False, num_classes=num_classes)
+```
 
 # TODO
-- [] Re-train on COCO (~580 epochs) with custom labels
-- [] Train on CityScapes
+- [] Train on CityScapes (±600 epochs)
+- [] Combine from_games Dataset
 - [] Make clearer notes
 - [] Upload models
 - [] Make reference to mixed precision
@@ -12,10 +27,39 @@ I could not find a good set of trained models online so I decided to train my ow
 - [] Attempt multi-node if required
 - [] Add in evaluation code based on reference but using multiple models
 - [] Add in links to reference code
-- [] Add in required dependencies and an environment
+- [√] Add in required dependencies and an environment
 
 # Thanks
 Computations were performed using High Performance Computing infrastructure provided by the Mathematical Sciences Support unit at the University of the Witwatersrand.
+
+# References
+## Cityscapes Dataset
+Home Page: https://www.cityscapes-dataset.com/
+```
+@inproceedings{Cordts2016Cityscapes,
+    title={The Cityscapes Dataset for Semantic Urban Scene Understanding},
+    author={Cordts, Marius and Omran, Mohamed and Ramos, Sebastian and Rehfeld, Timo and Enzweiler, Markus and Benenson, Rodrigo and Franke, Uwe and Roth, Stefan and Schiele, Bernt},
+    booktitle={Proc. of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
+    year={2016}
+}
+```
+
+## from_games Dataset
+Home Page: https://download.visinf.tu-darmstadt.de/data/from_games/
+
+```
+@InProceedings{Richter_2016_ECCV,
+    author = {Stephan R. Richter and Vibhav Vineet and Stefan Roth and Vladlen Koltun},
+    title = {Playing for Data: {G}round Truth from Computer Games},
+    booktitle = {European Conference on Computer Vision (ECCV)},
+    year = {2016},
+    editor = {Bastian Leibe and Jiri Matas and Nicu Sebe and Max Welling},
+    series = {LNCS},
+    volume = {9906},
+    publisher = {Springer International Publishing},
+    pages = {102--118}
+}
+```
 
 # Notes
 Modify the hardcoded labels in the coco_utils and then train them: https://github.com/pytorch/vision/blob/main/references/segmentation/coco_utils.py

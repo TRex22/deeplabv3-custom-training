@@ -13,15 +13,16 @@ class FromGamesDataset:
 
     self.count = len(self.image_paths)
     self.split = 0.8 # 80% for training, hardcode for now
-    train_start_idex = self.count - (self.count * self.split)
+    train_start_idex = int(self.count - (self.count * self.split))
 
     if split == 'train':
       self.image_paths = self.image_paths[train_start_idex:-1]
       self.label_paths = self.label_paths[train_start_idex:-1]
-
     elif split == 'val': # TODO: Test?
       self.image_paths = self.image_paths[0:train_start_idex]
       self.label_paths = self.label_paths[0:train_start_idex]
+
+    self.count = len(self.image_paths)
 
   def __len__(self):
     return self.count

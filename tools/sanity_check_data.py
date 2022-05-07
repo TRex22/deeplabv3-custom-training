@@ -132,5 +132,9 @@ fromgames_dataset_val = FromGamesDataset(fromgames_path, split='val', transforms
 
 # print(f'coco_dataset_train: {len(coco_dataset_train)}')
 # print(f'coco_dataset_val: {len(coco_dataset_val)}')
+
 print(f'cityscapes_dataset_train: {len(cityscapes_dataset_train)}')
 print(f'cityscapes_dataset_val: {len(cityscapes_dataset_val)}')
+
+print(f'fromgames_dataset_train: {len(fromgames_dataset_train)}')
+print(f'fromgames_dataset_val: {len(fromgames_dataset_val)}')

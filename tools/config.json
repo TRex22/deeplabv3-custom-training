@@ -1,6 +1,6 @@
 {
   "selected_model": "deeplabv3_resnet50", //"deeplabv3_resnet50", // "deeplabv3_resnet101"
-  "dataset": "cityscapes", // "COCO16", "COCO21"
+  "dataset": "fromgames", // "COCO16", "COCO21", "cityscapes", "fromgames"
   "opt_function": "ADAM", //"SGD", // "ADAM",
   "batch_size": 15,
   "val_batch_size": 4, // 1 // 8 // Val is not cropped // 1 seems to be the fastest
@@ -16,7 +16,8 @@
   "amsgrad": true, // To attempt to fix convergence issues
   "load_model": false,
   "save_path": "/data/trained_models/deeplabv3_resnet50/adam/", // "/data/trained_models/deeplabv3_resnet101/adam/", // "/data/trained_models/deeplabv3_resnet50/adam/",
-  "dataset_path": "/data/data/cityscapes/data_raw/", // "/mnt/scratch_disk/data/cityscapes/raw/", // "/data/data/cityscapes/data_raw/",
+  "dataset_path": "/data/data/fromgames/", // "/mnt/scratch_disk/data/cityscapes/raw/", // "/data/data/cityscapes/data_raw/",
+  // "mixed_dataset_path": "",
   "shuffle": true,
   "drop_last": true,
   "pin_memory": true,

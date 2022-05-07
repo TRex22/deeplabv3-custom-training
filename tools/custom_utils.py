@@ -20,6 +20,8 @@ from torchinfo import summary
 import sys
 sys.path.insert(1, '../references/segmentation/')
 
+from from_games_dataset import FromGamesDataset
+
 # Reference Code
 import presets
 import utils
@@ -105,6 +107,9 @@ def rescale_pixels(image, scale=1./255.):
 def undo_rescale_pixels(image, scale=1./255.):
   return image * (1/scale)
 
+################################################################################
+# Dataset Loading                                                              #
+################################################################################
 def cityscapes_collate(batch):
   images, targets = list(zip(*batch))
 
@@ -114,14 +119,15 @@ def cityscapes_collate(batch):
 
   return torch.from_numpy(images), torch.from_numpy(targets)
 
-################################################################################
-# Dataset Loading                                                              #
-################################################################################
 def load_dataset(config, root, image_set, category_list=None, batch_size=1, training=False):
   if config["dataset"] == "COCO16" or config["dataset"] == "COCO21":
     dataset = load_coco(root, image_set, category_list=category_list)
   elif config["dataset"] == "cityscapes":
     dataset = torchvision.datasets.Cityscapes(root, split=image_set, mode=config["cityscapes_mode"], target_type='semantic', transforms=cityscapes_transforms()) # TODO: Cityscapes 'test'
+  elif config["dataset"] == "fromgames":
+    dataset = FromGamesDataset(root, split=image_set, transforms=cityscapes_transforms())
+  # elif config["dataset"] == "mixed":
+    # TODO: Mix here
 
   sample_size = len(dataset) * config["sample_percentage"]
   if training:
@@ -156,7 +162,7 @@ def fetch_category_list(config):
 # COCO Dataset
 # train_image_path = '/data/data/coco/data_raw/train2017'
 # val_image_path = '/data/data/coco/data_raw/val2017'
-# train_annotation_path = '/mnt/excelsior/data/coco/zips/annotations/annotations/instances_train2017.json'
+# train_annotation_path = '/data/data/coco/zips/annotations/annotations/instances_train2017.json'
 # val_annotation_path = '/data/data/coco/zips/annotations/annotations/instances_val2017.json'
 
 # train_dataset = torchvision.datasets.CocoDetection(train_image_path, train_annotation_path)

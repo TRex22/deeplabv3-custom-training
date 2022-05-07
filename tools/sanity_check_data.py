@@ -11,6 +11,8 @@ import custom_utils
 import sys
 sys.path.insert(1, '../references/segmentation/')
 
+from from_games_dataset import FromGamesDataset
+
 import presets
 from coco_utils import get_coco
 import transforms as T
@@ -20,6 +22,7 @@ print("Sanity Check Data ...")
 batch_size = 16
 coco_dataset_path = "/mnt/scratch_disk/data/coco/data_raw/"
 cityscapes_path = "/data/data/cityscapes/data_raw/"
+fromgames_path = "/data/data/fromgames/"
 
 config = {
   "dataset": "COCO21",
@@ -123,6 +126,9 @@ print('=== DataSet Calls ==')
 
 cityscapes_dataset_train = torchvision.datasets.Cityscapes(cityscapes_path, split='train', mode='fine', target_type='semantic', transforms=custom_utils.cityscapes_transforms())
 cityscapes_dataset_val = torchvision.datasets.Cityscapes(cityscapes_path, split='val', mode='fine', target_type='semantic', transforms=custom_utils.cityscapes_transforms())
+
+fromgames_dataset_train = FromGamesDataset(fromgames_path, split='train', transforms=custom_utils.cityscapes_transforms())
+fromgames_dataset_val = FromGamesDataset(fromgames_path, split='val', transforms=custom_utils.cityscapes_transforms())
 
 # print(f'coco_dataset_train: {len(coco_dataset_train)}')
 # print(f'coco_dataset_val: {len(coco_dataset_val)}')

@@ -27,7 +27,7 @@ from coco_utils import get_coco
 import transforms as T
 
 ################################################################################
-# Helper Methids                                                               #
+# Helper Methods                                                               #
 ################################################################################
 def clear_gpu():
   # If you need to purge memory
@@ -36,14 +36,16 @@ def clear_gpu():
   # torch.cuda.empty_cache() # Will nuke the model in-memory
   torch.cuda.synchronize() # Force the unload before the next step
 
-# Used to load pre-trained models or return None (So we can construct the new ones)
-def fetch(model):
-  if model == 'ResNet50':
-    return models.segmentation.deeplabv3_resnet50(pretrained=True, num_classes=21)
-  elif model == 'ResNet101':
-    return models.segmentation.deeplabv3_resnet101(pretrained=True, num_classes=21)
+def fetch_device():
+  print(f'Cuda available? {torch.cuda.is_available()}')
+  dev = torch.device('cpu')
+  summary_dev = 'cpu'
 
-  return None
+  if torch.cuda.is_available():
+    dev = torch.device('cuda')
+    summary_dev = 'cuda'
+
+  return [dev, summary_dev]
 
 # Will either open the config path or get config from model checkpoint
 def open_config(path):
@@ -70,10 +72,16 @@ def open_config(path):
 
   return [config, epoch, model_path]
 
+def create_folder(path):
+  Path(path).mkdir(parents=True, exist_ok=True)
+
 def save_csv(file_path, csv_data):
   with open(file_path, 'a') as f:
     f.write(f'{csv_data}\n')
 
+################################################################################
+# Image Transforms                                                             #
+################################################################################
 # https://discuss.pytorch.org/t/normalising-images-in-cityscapes-using-mean-and-std-of-imagenet/120556
 def cityscapes_transforms():
   mean = (0.485, 0.456, 0.406) # Taken from COCO reference
@@ -106,6 +114,9 @@ def cityscapes_collate(batch):
 
   return torch.from_numpy(images), torch.from_numpy(targets)
 
+################################################################################
+# Dataset Loading                                                              #
+################################################################################
 def load_dataset(config, root, image_set, category_list=None, batch_size=1, training=False):
   if config["dataset"] == "COCO16" or config["dataset"] == "COCO21":
     dataset = load_coco(root, image_set, category_list=category_list)
@@ -166,16 +177,17 @@ def load_coco(root, image_set, category_list=None):
 
   return get_coco(root, image_set, transforms, category_list=category_list)
 
-def fetch_device():
-  print(f'Cuda available? {torch.cuda.is_available()}')
-  dev = torch.device('cpu')
-  summary_dev = 'cpu'
+################################################################################
+# Model Functions                                                              #
+################################################################################
+# Used to load pre-trained models or return None (So we can construct the new ones)
+def fetch(model):
+  if model == 'ResNet50':
+    return models.segmentation.deeplabv3_resnet50(pretrained=True, num_classes=21)
+  elif model == 'ResNet101':
+    return models.segmentation.deeplabv3_resnet101(pretrained=True, num_classes=21)
 
-  if torch.cuda.is_available():
-    dev = torch.device('cuda')
-    summary_dev = 'cuda'
-
-  return [dev, summary_dev]
+  return None
 
 def xavier_uniform_init(layer):
   if type(layer) == nn.Linear or type(layer) == nn.Conv2d:
@@ -225,9 +237,6 @@ def load(model, opt, device, path, show_stats=True):
 
   return model, opt
 
-def create_folder(path):
-  Path(path).mkdir(parents=True, exist_ok=True)
-
 # Built to be compatible with reference code
 def save(model, opt, lr_scheduler, epoch, config, save_path):
   checkpoint = {
@@ -242,6 +251,34 @@ def save(model, opt, lr_scheduler, epoch, config, save_path):
 
   torch.save(checkpoint, os.path.join(save_path, f"model_{epoch}.pth"))
 
+################################################################################
+# Loss Functions                                                               #
+################################################################################
+# Based on: https://towardsdatascience.com/intersection-over-union-iou-calculation-for-evaluating-an-image-segmentation-model-8b22e2e84686
+def compute_iou(output, target):
+  intersection = torch.logical_and(output, target)
+  union = torch.logical_or(output, target)
+  iou_score = torch.sum(intersection) / torch.sum(union)
+  # print(f'IoU is {iou_score}')
+
+  return iou_score
+
+# https://towardsdatascience.com/choosing-and-customizing-loss-functions-for-image-processing-a0e4bf665b0a
+# https://stackoverflow.com/questions/47084179/how-to-calculate-multi-class-dice-coefficient-for-multiclass-image-segmentation
+# Dice Co-Efficient
+def dice_coef(y_true, y_pred, epsilon=1e-4): # 1e-6 wont work for float16
+  # Altered Sorensen–Dice coefficient with epsilon for smoothing.
+  y_true_flatten = y_true.to(torch.bool)
+  y_pred_flatten = y_pred.to(torch.bool)
+
+  if not torch.sum(y_true_flatten) + torch.sum(y_pred_flatten):
+    return 1.0
+
+  return (2. * torch.sum(y_true_flatten * y_pred_flatten)) / (torch.sum(y_true_flatten) + torch.sum(y_pred_flatten) + epsilon)
+
+################################################################################
+# Train and Eval                                                               #
+################################################################################
 def loss_batch(model, device, scaler, loss_func, xb, yb, opt=None):
   if opt is not None:
     # opt.zero_grad(set_to_none=True) # set_to_none=True here can modestly improve performance
@@ -385,25 +422,3 @@ def validate(model, device, loss_func, lr_scheduler, epoch, config, category_lis
   if lr_scheduler is not None and config["opt_function"] == 'SGD':
     # https://pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.ReduceLROnPlateau.html
     lr_scheduler.step(final_loss) # Use the average val loss for the batch
-
-# Based on: https://towardsdatascience.com/intersection-over-union-iou-calculation-for-evaluating-an-image-segmentation-model-8b22e2e84686
-def compute_iou(output, target):
-  intersection = torch.logical_and(output, target)
-  union = torch.logical_or(output, target)
-  iou_score = torch.sum(intersection) / torch.sum(union)
-  # print(f'IoU is {iou_score}')
-
-  return iou_score
-
-# https://towardsdatascience.com/choosing-and-customizing-loss-functions-for-image-processing-a0e4bf665b0a
-# https://stackoverflow.com/questions/47084179/how-to-calculate-multi-class-dice-coefficient-for-multiclass-image-segmentation
-# Dice Co-Efficient
-def dice_coef(y_true, y_pred, epsilon=1e-4): # 1e-6 wont work for float16
-  # Altered Sorensen–Dice coefficient with epsilon for smoothing.
-  y_true_flatten = y_true.to(torch.bool)
-  y_pred_flatten = y_pred.to(torch.bool)
-
-  if not torch.sum(y_true_flatten) + torch.sum(y_pred_flatten):
-    return 1.0
-
-  return (2. * torch.sum(y_true_flatten * y_pred_flatten)) / (torch.sum(y_true_flatten) + torch.sum(y_pred_flatten) + epsilon)

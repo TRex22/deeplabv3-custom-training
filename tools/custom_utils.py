@@ -92,10 +92,10 @@ def cityscapes_transforms():
   # https://stackoverflow.com/questions/49356743/how-to-train-tensorflows-deeplab-model-on-cityscapes
   transforms_arr = T.Compose(
     [
-      # T.RandomCrop(460), # 480 # 513 # 520
+      T.RandomCrop(460), # 480 # 513 # 520
       T.PILToTensor(),
-      # T.ConvertImageDtype(torch.float),
-      # T.Normalize(mean=mean, std=std),
+      T.ConvertImageDtype(torch.float),
+      T.Normalize(mean=mean, std=std),
     ]
   )
 

@@ -21,7 +21,7 @@
   "shuffle": true,
   "drop_last": true,
   "pin_memory": true,
-  "train_num_workers": 0, //3, // 4 for resnet50
-  "val_num_workers": 0, //3, // 4 for resnet50
+  "train_num_workers": 4, //3, // 4 for resnet50
+  "val_num_workers": 4, //3, // 4 for resnet50
   "cityscapes_mode": "fine" // "coarse"
 }

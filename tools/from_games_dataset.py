@@ -33,8 +33,8 @@ class FromGamesDataset:
     label_path = f'{self.base_path}/labels/{self.label_paths[idx]}'
 
     image = Image.open(img_path) # read_image(img_path) #.float() # .permute(0, 2, 1).float() # .permute(0, 2, 1)
-    label = read_image(label_path).squeeze(0) #.int() # .permute(0, 2, 1).int() # .permute(0, 2, 1)
-    # breakpoint()
+    label = Image.open(label_path) # read_image(label_path).squeeze(0) #.int() # .permute(0, 2, 1).int() # .permute(0, 2, 1)
+
     if self.transforms:
       image, label = self.transforms(image, label)
 

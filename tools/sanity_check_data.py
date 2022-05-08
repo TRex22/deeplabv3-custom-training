@@ -208,6 +208,6 @@ print(f'fromgames_dataset_val: {len(fromgames_dataset_val)}\n')
 
 print('=== Iterate through Data ==')
 for xb, yb in fromgames_dataset_train:
-  print "Exists!"
+  print("Exists!")
 
 breakpoint()

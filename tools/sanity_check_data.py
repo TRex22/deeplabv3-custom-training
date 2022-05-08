@@ -207,11 +207,11 @@ print(f'fromgames_dataset_train: {len(fromgames_dataset_train)}')
 print(f'fromgames_dataset_val: {len(fromgames_dataset_val)}\n')
 
 print('=== Iterate through Data ==')
-print('fromgames')
-for xb, yb in tqdm.tqdm(coco_dataset_val):
-  1+1 # Do some task
+# print('coco')
+# for xb, yb in tqdm.tqdm(coco_dataset_val):
+#   1+1 # Do some task
 
-print('fromgames')
+print('cityscapes')
 for xb, yb in tqdm.tqdm(cityscapes_dataset_val):
   1+1 # Do some task
 

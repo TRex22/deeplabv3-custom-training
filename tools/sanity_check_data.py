@@ -20,9 +20,11 @@ import transforms as T
 print("Sanity Check Data ...")
 
 batch_size = 16
-coco_dataset_path = "/data/data/coco/data_raw/"
-cityscapes_path = "/data/data/cityscapes/data_raw/"
-fromgames_path = "/data/data/fromgames/"
+
+base_path = '/home-mscluster/jchalom/data' #'/data/data'
+coco_dataset_path = f"{base_path}/coco/data_raw/"
+cityscapes_path = f"{base_path}/cityscapes/data_raw/"
+fromgames_path = f"{base_path}/from_games/"
 
 config = {
   "dataset": "COCO21",
@@ -203,3 +205,18 @@ print(f'cityscapes_dataset_val: {len(cityscapes_dataset_val)}\n')
 
 print(f'fromgames_dataset_train: {len(fromgames_dataset_train)}')
 print(f'fromgames_dataset_val: {len(fromgames_dataset_val)}\n')
+
+print('=== Iterate through Data ==')
+# print('coco')
+# for xb, yb in tqdm.tqdm(coco_dataset_val):
+#   1+1 # Do some task
+
+print('cityscapes')
+for xb, yb in tqdm.tqdm(cityscapes_dataset_val):
+  1+1 # Do some task
+
+print('fromgames')
+for xb, yb in tqdm.tqdm(fromgames_dataset_val):
+  1+1 # Do some task
+
+breakpoint()

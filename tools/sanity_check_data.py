@@ -125,7 +125,7 @@ val_dataset, val_dataloader = custom_utils.load_dataset(config, config['dataset_
 
 print(f'train_dataset: {len(train_dataset)}, train_dataloader: {len(train_dataloader)}, train_dataloader * batch_size: {len(train_dataloader) * batch_size}')
 print(f'val_dataset: {len(val_dataset)}, val_dataloader: {len(val_dataloader)}')
-breakpoint()
+
 print('Sample 10%')
 config = {
   "dataset": "fromgames",
@@ -205,3 +205,7 @@ print(f'cityscapes_dataset_val: {len(cityscapes_dataset_val)}\n')
 
 print(f'fromgames_dataset_train: {len(fromgames_dataset_train)}')
 print(f'fromgames_dataset_val: {len(fromgames_dataset_val)}\n')
+
+print('=== Iterate through Data ==')
+for xb, yb in fromgames_dataset_train:
+  print "Exists!"

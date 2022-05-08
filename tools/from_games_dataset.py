@@ -1,4 +1,5 @@
 import os
+from PIL import Image
 from torchvision.io import read_image
 
 # https://towardsdatascience.com/beginners-guide-to-loading-image-data-with-pytorch-289c60b7afec # VaporWave
@@ -28,13 +29,13 @@ class FromGamesDataset:
     return self.count
 
   def __getitem__(self, idx):
-    img_path = f'{self.base_path}/{self.image_paths[idx]}'
-    label_path = f'{self.base_path}/{self.label_paths[idx]}'
+    img_path = f'{self.base_path}/images/{self.image_paths[idx]}'
+    label_path = f'{self.base_path}/labels/{self.label_paths[idx]}'
 
-    image = read_image(img_path).permute(0, 2, 1).float() # .permute(0, 2, 1)
-    label = read_image(label_path).permute(0, 2, 1).int() # .permute(0, 2, 1)
-
+    image = Image.open(img_path) # read_image(img_path) #.float() # .permute(0, 2, 1).float() # .permute(0, 2, 1)
+    label = read_image(label_path).squeeze(0) #.int() # .permute(0, 2, 1).int() # .permute(0, 2, 1)
+    # breakpoint()
     if self.transforms:
-      image = self.transforms(image)
+      image, label = self.transforms(image, label)
 
-    return (image, label) # Return as a tuple
+    return image, label

@@ -92,10 +92,10 @@ def cityscapes_transforms():
   # https://stackoverflow.com/questions/49356743/how-to-train-tensorflows-deeplab-model-on-cityscapes
   transforms_arr = T.Compose(
     [
-      T.RandomCrop(460), # 480 # 513 # 520
+      # T.RandomCrop(460), # 480 # 513 # 520
       T.PILToTensor(),
-      T.ConvertImageDtype(torch.float),
-      T.Normalize(mean=mean, std=std),
+      # T.ConvertImageDtype(torch.float),
+      # T.Normalize(mean=mean, std=std),
     ]
   )
 
@@ -155,7 +155,7 @@ def fetch_category_list(config):
     return  [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 13, 14, 15, 16] # New list of categories
   elif config["dataset"] == "COCO21":
     return [0, 5, 2, 16, 9, 44, 6, 3, 17, 62, 21, 67, 18, 19, 4, 1, 64, 20, 63, 7, 72] # Original List
-  elif config["dataset"] == "cityscapes":
+  elif config["dataset"] == "cityscapes" or config["dataset"] == "fromgames":
     # return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, -1] # Cityscapes
     return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33] # Cityscapes
 

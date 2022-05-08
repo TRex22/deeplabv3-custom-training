@@ -24,7 +24,7 @@ batch_size = 16
 base_path = '/home-mscluster/jchalom/data' #'/data/data'
 coco_dataset_path = f"{base_path}/coco/data_raw/"
 cityscapes_path = f"{base_path}/cityscapes/data_raw/"
-fromgames_path = f"{base_path}/fromgames/"
+fromgames_path = f"{base_path}/from_games/"
 
 config = {
   "dataset": "COCO21",

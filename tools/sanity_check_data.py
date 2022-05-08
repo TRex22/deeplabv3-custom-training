@@ -20,9 +20,11 @@ import transforms as T
 print("Sanity Check Data ...")
 
 batch_size = 16
-coco_dataset_path = "/data/data/coco/data_raw/"
-cityscapes_path = "/data/data/cityscapes/data_raw/"
-fromgames_path = "/data/data/fromgames/"
+
+base_path = '/home-mscluster/jchalom/data' #'/data/data'
+coco_dataset_path = f"{base_path}/coco/data_raw/"
+cityscapes_path = f"{base_path}/cityscapes/data_raw/"
+fromgames_path = f"{base_path}/fromgames/"
 
 config = {
   "dataset": "COCO21",

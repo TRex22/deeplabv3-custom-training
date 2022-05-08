@@ -3,7 +3,9 @@ This repo exists to train the pyTorch Torchvision deeplabv3 models with custom l
 
 I could not find a good set of trained models online so I decided to train my own.
 
-My aim is to train on the main cityscapes train dataset as well as combine it with the from_games dataset to attempt to improve and generalise the performance of the models.
+My aim is to train on the main cityscapes train dataset as well as combine it with the from_games dataset in an attempt to improve and generalise the performance of the models.
+
+This is compatible with the torchvision models versions of deeplabv3 as exports I found online required custom models or Tensorflow.
 
 # Usage of pre-trained models
 1. Download the trained model `.pth`
@@ -21,7 +23,7 @@ model = models.segmentation.deeplabv3_resnet101(pretrained=False, num_classes=nu
 model_weights = torch.load(path_to_model_weight)
 
 # If using a checkpoint
-model_weights = torch.load(path_to_model_weight)['model']
+model_weights = torch.load(path_to_model_checkpoint)['model']
 
 # Load in the weights
 model = model.load_state_dict(model_weights, strict=False)
@@ -35,8 +37,19 @@ model = model.eval()
 # Do stuff ...
 ```
 
+# Download Pre-trained Weights
+## Trained on CityScapes
+
+## Trained on a combined CityScapes and from_games
+
 # Optimisations made
 
+# Resources Used
+
+
+# How to train
+1. Install Anaconda and create the required environment:
+`conda env create --file deeplabv3.yml`
 
 # TODO
 - [] Train on CityScapes (±600 epochs)
@@ -120,22 +133,34 @@ CAT_LIST = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 2
 20: sheep
 21: cow
 
-## Train Command
+## Train Command Use in Reference Code
 `torchrun train.py -h`
 
 ### Resnet50
+```
 torchrun train.py --data-path /data/data/coco/data_raw/ --device cuda --lr 0.02 --dataset coco -b 12 -j 12 --epochs 30 --model deeplabv3_resnet50 --aux-loss --weights-backbone ResNet101_Weights.IMAGENET1K_V1 --output-dir /data/models/vision/
+```
 
+```
 torchrun train.py --data-path /mnt/scratch_disk/data/coco/data_raw/ --device cuda --lr 0.02 --dataset coco -b 12 -j 12 --epochs 30 --model deeplabv3_resnet50 --aux-loss --weights-backbone ResNet101_Weights.IMAGENET1K_V1 --output-dir /data/models/vision/
+```
 
 ### Resnet101
+```
 torchrun train.py --data-path /data/data/coco/data_raw/ --device cuda --lr 0.02 --dataset coco -b 6 -j 12 --epochs 30 --model deeplabv3_resnet101 --aux-loss --weights-backbone ResNet101_Weights.IMAGENET1K_V1 --output-dir /data/models/vision/
+```
 
+```
 torchrun train.py --data-path /mnt/scratch_disk/data/coco/data_raw/ --device cuda --lr 0.02 --dataset coco -b 6 -j 12 --epochs 30 --model deeplabv3_resnet101 --aux-loss --weights-backbone ResNet101_Weights.IMAGENET1K_V1 --output-dir /data/models/vision/
+```
 
 ## Resume
 ### Resnet50
+```
 torchrun train.py --data-path /mnt/scratch_disk/data/coco/data_raw/ --device cuda --lr 0.02 --dataset coco -b 12 -j 12 --epochs 30 --model deeplabv3_resnet50 --aux-loss --weights-backbone ResNet101_Weights.IMAGENET1K_V1 --output-dir /data/models/vision/ --start-epoch 5 --resume /data/models/vision/checkpoint.pth
+```
 
 ### Resnet101
+```
 torchrun train.py --data-path /mnt/scratch_disk/data/coco/data_raw/ --device cuda --lr 0.02 --dataset coco -b 6 -j 12 --epochs 30 --model deeplabv3_resnet101 --aux-loss --weights-backbone ResNet101_Weights.IMAGENET1K_V1 --output-dir /data/models/vision/ --start-epoch 5 --resume /data/models/vision/checkpoint.pth
+```

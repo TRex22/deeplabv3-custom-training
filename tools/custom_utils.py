@@ -287,11 +287,11 @@ def compute_iou2(outputs: torch.Tensor, labels: torch.Tensor):
 
   return thresholded.mean() #thresholded  # Or thresholded.mean() if you are interested in average across the batch
 
+# TODO: Convert to Tensor
 # Based on: https://github.com/chenxi116/DeepLabv3.pytorch/blob/master/utils.py
 def compute_iou3(output, target, num_classes):
   pred = np.asarray(output.cpu(), dtype=np.uint8).copy()
   mask = np.asarray(target.cpu(), dtype=np.uint8).copy()
-
   # 255 -> 0
   pred += 1
   mask += 1
@@ -304,7 +304,7 @@ def compute_iou3(output, target, num_classes):
   area_union = area_pred + area_mask - area_inter
 
   # return (area_inter, area_union)
-  return (area_inter / area_union).mean()
+  return ((area_inter + 1e-6) / (area_union + 1e-6)).mean()
 
 # TODO: IOU SKLearn
 
@@ -354,11 +354,11 @@ def loss_batch(model, device, scaler, loss_func, xb, yb, opt=None, num_classes=N
 
     # iou_score1 = (sum_batch_iou_score1 / output.shape[0]) # 1 -
     # iou_score1 = compute_iou1(output.argmax(1), target)
-    iou_score2 = compute_iou2(output.argmax(1), target)
-    # iou_score3 = compute_iou3(output.argmax(1), target, num_classes)
+    # iou_score2 = compute_iou2(output.argmax(1), target)
+    iou_score3 = compute_iou3(output.argmax(1), target, num_classes)
 
     # Select score to use
-    selected_iou_score = iou_score2
+    selected_iou_score = iou_score3
 
     del output
     del target

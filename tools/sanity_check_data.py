@@ -21,10 +21,10 @@ print("Sanity Check Data ...")
 
 batch_size = 16
 
-base_path = '/home-mscluster/jchalom/data' #'/data/data'
+base_path = '/data/data' #'/home-mscluster/jchalom/data' #'/data/data'
 coco_dataset_path = f"{base_path}/coco/data_raw/"
 cityscapes_path = f"{base_path}/cityscapes/data_raw/"
-fromgames_path = f"{base_path}/from_games/"
+fromgames_path = f"{base_path}/fromgames/"
 
 config = {
   "dataset": "COCO21",

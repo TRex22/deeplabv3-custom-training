@@ -261,13 +261,52 @@ def save(model, opt, lr_scheduler, epoch, config, save_path):
 # Loss Functions                                                               #
 ################################################################################
 # Based on: https://towardsdatascience.com/intersection-over-union-iou-calculation-for-evaluating-an-image-segmentation-model-8b22e2e84686
-def compute_iou(output, target):
+def compute_iou1(output, target):
   intersection = torch.logical_and(output, target)
   union = torch.logical_or(output, target)
   iou_score = torch.sum(intersection) / torch.sum(union)
   # print(f'IoU is {iou_score}')
 
   return iou_score
+
+# Based on: https://www.kaggle.com/code/iezepov/fast-iou-scoring-metric-in-pytorch-and-numpy/script
+def compute_iou2(outputs: torch.Tensor, labels: torch.Tensor):
+  SMOOTH = 1e-6
+
+  # You can comment out this line if you are passing tensors of equal shape
+  # But if you are passing output from UNet or something it will most probably
+  # be with the BATCH x 1 x H x W shape
+  outputs = outputs.squeeze(1)  # BATCH x 1 x H x W => BATCH x H x W
+
+  intersection = (outputs & labels).float().sum((1, 2))  # Will be zero if Truth=0 or Prediction=0
+  union = (outputs | labels).float().sum((1, 2))         # Will be zzero if both are 0
+
+  iou = (intersection + SMOOTH) / (union + SMOOTH)  # We smooth our devision to avoid 0/0
+
+  thresholded = torch.clamp(20 * (iou - 0.5), 0, 10).ceil() / 10  # This is equal to comparing with thresolds
+
+  return thresholded.mean() #thresholded  # Or thresholded.mean() if you are interested in average across the batch
+
+# Based on: https://github.com/chenxi116/DeepLabv3.pytorch/blob/master/utils.py
+def compute_iou3(output, target, num_classes):
+  pred = np.asarray(output.cpu(), dtype=np.uint8).copy()
+  mask = np.asarray(target.cpu(), dtype=np.uint8).copy()
+
+  # 255 -> 0
+  pred += 1
+  mask += 1
+  pred = pred * (mask > 0)
+
+  inter = pred * (pred == mask)
+  (area_inter, _) = np.histogram(inter, bins=num_classes, range=(1, num_classes))
+  (area_pred, _) = np.histogram(pred, bins=num_classes, range=(1, num_classes))
+  (area_mask, _) = np.histogram(mask, bins=num_classes, range=(1, num_classes))
+  area_union = area_pred + area_mask - area_inter
+
+  # return (area_inter, area_union)
+  return (area_inter / area_union).mean()
+
+# TODO: IOU SKLearn
 
 # https://towardsdatascience.com/choosing-and-customizing-loss-functions-for-image-processing-a0e4bf665b0a
 # https://stackoverflow.com/questions/47084179/how-to-calculate-multi-class-dice-coefficient-for-multiclass-image-segmentation
@@ -285,7 +324,7 @@ def dice_coef(y_true, y_pred, epsilon=1e-4): # 1e-6 wont work for float16
 ################################################################################
 # Train and Eval                                                               #
 ################################################################################
-def loss_batch(model, device, scaler, loss_func, xb, yb, opt=None):
+def loss_batch(model, device, scaler, loss_func, xb, yb, opt=None, num_classes=None):
   if opt is not None:
     # opt.zero_grad(set_to_none=True) # set_to_none=True here can modestly improve performance
     for param in model.parameters(): # Optimisation to save n operations
@@ -304,17 +343,22 @@ def loss_batch(model, device, scaler, loss_func, xb, yb, opt=None):
     loss = loss_func(output, target, ignore_index=255)
     dice_loss = dice_coef(target, output.argmax(1))
 
-    sum_batch_iou_score = 0.0
+    # sum_batch_iou_score1 = 0.0
     # sum_dice_loss = 0.0
 
     # Iterate through batch
     # TODO: use operators over batch?
-    for i in range(output.shape[0]):
-      sum_batch_iou_score += compute_iou(output[i], target[i]).detach() # .cpu()
+    # for i in range(output.shape[0]):
+      # sum_batch_iou_score1 += compute_iou1(output[i], target[i]).detach() # .cpu()
       # sum_dice_loss += dice_coef(target[i], output.argmax(1)[i])
 
-    iou_score = (sum_batch_iou_score / output.shape[0]) # 1 -
-    # dice_loss = (sum_dice_loss / output.shape[0]) # 1 -
+    # iou_score1 = (sum_batch_iou_score1 / output.shape[0]) # 1 -
+    # iou_score1 = compute_iou1(output.argmax(1), target)
+    iou_score2 = compute_iou2(output.argmax(1), target)
+    # iou_score3 = compute_iou3(output.argmax(1), target, num_classes)
+
+    # Select score to use
+    selected_iou_score = iou_score2
 
     del output
     del target
@@ -335,12 +379,15 @@ def loss_batch(model, device, scaler, loss_func, xb, yb, opt=None):
 
   # Check if loss.detach() is better
   # cpu().item()
-  return [loss.detach(), dice_loss, iou_score, opt]
+  return [loss.detach(), dice_loss, selected_iou_score, opt]
 
 def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, config, opt=None, save=True):
   sum_of_loss = 0.0
   sum_of_iou = 0.0
   sum_of_dice = 0.0
+
+  category_list = fetch_category_list(config)
+  num_classes = len(category_list)
 
   pbar = tqdm.tqdm(total=len(dataloader))
 
@@ -348,7 +395,7 @@ def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, co
   if opt is None: # Validation
     # Dont use sub-batches
     for xb, yb in dataloader:
-      loss, dice_loss, iou_score, _opt = loss_batch(model, device, scaler, loss_func, xb, yb, opt=opt)
+      loss, dice_loss, iou_score, _opt = loss_batch(model, device, scaler, loss_func, xb, yb, opt=opt, num_classes=num_classes)
 
       sum_of_loss += loss
       sum_of_iou += iou_score
@@ -374,7 +421,7 @@ def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, co
         xb = inner_batch[0][i:i+batch_size]
         yb = inner_batch[1][i:i+batch_size]
 
-        loss, dice_loss, iou_score, opt = loss_batch(model, device, scaler, loss_func, xb, yb, opt=opt)
+        loss, dice_loss, iou_score, opt = loss_batch(model, device, scaler, loss_func, xb, yb, opt=opt, num_classes=num_classes)
 
         sum_of_loss += loss
         sum_of_iou += iou_score

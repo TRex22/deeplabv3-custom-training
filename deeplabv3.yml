@@ -72,11 +72,12 @@ dependencies:
   - urllib3=1.26.8=pyhd3eb1b0_0
   - wheel=0.37.1=pyhd3eb1b0_0
   - xz=5.2.5=h7b6447c_0
-  - zlib=1.2.12
-  - zstd=1.4.9
+  - zlib=1.2.12=h7f8727e_1
+  - zstd=1.4.9=haebb681_0
   - pip:
     - cycler==0.11.0
     - fonttools==4.32.0
+    - joblib==1.1.0
     - kiwisolver==1.4.2
     - matplotlib==3.5.1
     - opencv-python==4.5.5.64
@@ -84,4 +85,8 @@ dependencies:
     - pycocotools==2.0.4
     - pyparsing==3.0.8
     - python-dateutil==2.8.2
+    - scikit-learn==1.1.0
+    - scipy==1.8.0
+    - sklearn==0.0
+    - threadpoolctl==3.1.0
     - torchinfo==1.6.5

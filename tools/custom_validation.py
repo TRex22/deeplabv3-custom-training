@@ -26,12 +26,12 @@ torch.autograd.profiler.emit_nvtx(False)
 ################################################################################
 # Validate Strategies                                                          #
 ################################################################################
-def validate(model_path, model, dev, loss_func, config, category_list, save_path=None):
-  model, opt, epoch = custom_utils.load(model, opt, dev, model_path, show_stats=False)
-  final_loss, final_iou1, final_iou2, final_iou3 = custom_utils.validate(model, dev, loss_func, None, epoch, config, category_list=category_list, save=False)
+def validate(model_path, model, dev, loss_func, config, category_list, save_path=False):
+  model, _opt, epoch = custom_utils.load(model, dev, model_path, show_stats=False)
+  final_loss, final_dice, final_iou1, final_iou2, final_iou3 = custom_utils.validate(model, dev, loss_func, None, epoch, config, category_list=category_list, save=False)
 
   if save_path:
-    csv_data = f'{final_loss},{final_iou}'
+    csv_data = f'{final_loss},{final_iou1},{final_iou2},{final_iou3},{final_dice}'
     custom_utils.save_csv(save_path, csv_data)
 
 ################################################################################
@@ -45,9 +45,9 @@ if __name__ == '__main__':
   dev, summary_dev = custom_utils.fetch_device()
 
   model_path = sys.argv[1]
-  print(f'Validate: { model_path}')
+  print(f'Validate: {model_path}')
 
-  config, _start_epoch, model_path = custom_utils.open_config( model_path)
+  config, _start_epoch, model_path = custom_utils.open_config(model_path)
 
   # Based on reference code
   loss_func = nn.functional.cross_entropy # TODO: Add in weight

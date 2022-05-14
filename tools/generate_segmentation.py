@@ -115,7 +115,7 @@ if model is None:
 
   label_set = 'cityscapes'
   model, opt = custom_utils.initialise_model(device, config, num_classes=len(category_list))
-  model, _opt, _epoch = custom_utils.load(model, opt, device, model_path) # Load model
+  model, _opt, _epoch = custom_utils.load(model, device, model_path, opt=opt) # Load model
 
 model = model.to(device)
 model = model.eval()

@@ -29,7 +29,7 @@ if len(sys.argv) == 2:
   category_list = custom_utils.fetch_category_list(config)
 
   model, opt = custom_utils.initialise_model(device, config, num_classes=len(category_list))
-  model, _opt, _epoch = custom_utils.load(model, opt, device, model_path) # Load model
+  model, _opt, _epoch = custom_utils.load(model, device, model_path, opt=opt) # Load model
   model.to(device)
 
   config["val_batch_size"] = 1
@@ -45,7 +45,7 @@ elif len(sys.argv) == 3:
   category_list = custom_utils.fetch_category_list(config)
 
   model, opt = custom_utils.initialise_model(device, config, num_classes=len(category_list))
-  model, _opt, _epoch = custom_utils.load(model, opt, device, model_path) # Load model
+  model, _opt, _epoch = custom_utils.load(model, device, model_path, opt=opt) # Load model
   model.to(device)
 
   config["val_batch_size"] = 1

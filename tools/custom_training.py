@@ -66,7 +66,7 @@ def run_epochs_with_separate_loops(start_epoch, model, dev, loss_func, lr_schedu
   pbar = tqdm.tqdm(total=config["epochs"] - start_epoch)
   for epoch in range(start_epoch, config["epochs"], 1):
     path = f'{save_path}/model_{epoch}.pth'
-    model, _opt, _epoch = custom_utils.load(model, opt, dev, path, show_stats=False)
+    model, _opt, _epoch = custom_utils.load(model, dev, path, opt=opt, show_stats=False)
 
     custom_utils.validate(model, dev, loss_func, lr_scheduler, epoch, config, category_list=category_list)
     custom_utils.clear_gpu() # Needed to ensure no memory loss
@@ -113,7 +113,7 @@ if __name__ == '__main__':
   model, opt = custom_utils.initialise_model(dev, config, num_classes=len(category_list))
 
   if model_path is not None:
-    model, opt, _epoch = custom_utils.load(model, opt, dev, model_path) # Load model
+    model, opt, _epoch = custom_utils.load(model, dev, model_path, opt=opt) # Load model
 
   # Based on reference code
   loss_func = nn.functional.cross_entropy # TODO: Add in weight

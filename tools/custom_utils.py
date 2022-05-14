@@ -28,6 +28,8 @@ import utils
 from coco_utils import get_coco
 import transforms as T
 
+SMOOTH = 1e-4 #1e-6 # Beware Float16!
+
 ################################################################################
 # Helper Methods                                                               #
 ################################################################################
@@ -277,8 +279,6 @@ def compute_iou1(output, target):
 
 # Based on: https://www.kaggle.com/code/iezepov/fast-iou-scoring-metric-in-pytorch-and-numpy/script
 def compute_iou2(outputs: torch.Tensor, labels: torch.Tensor):
-  SMOOTH = 1e-6
-
   # You can comment out this line if you are passing tensors of equal shape
   # But if you are passing output from UNet or something it will most probably
   # be with the BATCH x 1 x H x W shape
@@ -310,14 +310,14 @@ def compute_iou3(output, target, num_classes):
   area_union = area_pred + area_mask - area_inter
 
   # return (area_inter, area_union)
-  return ((area_inter + 1e-6) / (area_union + 1e-6)).mean()
+  return ((area_inter + SMOOTH) / (area_union + SMOOTH)).mean()
 
 # TODO: IOU SKLearn
 
 # https://towardsdatascience.com/choosing-and-customizing-loss-functions-for-image-processing-a0e4bf665b0a
 # https://stackoverflow.com/questions/47084179/how-to-calculate-multi-class-dice-coefficient-for-multiclass-image-segmentation
 # Dice Co-Efficient
-def dice_coef(y_true, y_pred, epsilon=1e-4): # 1e-6 wont work for float16
+def dice_coef(y_true, y_pred, epsilon=SMOOTH): # 1e-6 wont work for float16
   # Altered Sorensen–Dice coefficient with epsilon for smoothing.
   y_true_flatten = y_true.to(torch.bool)
   y_pred_flatten = y_pred.to(torch.bool)

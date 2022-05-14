@@ -28,7 +28,7 @@ torch.autograd.profiler.emit_nvtx(False)
 ################################################################################
 def validate(model_path, model, dev, loss_func, config, category_list, save_path=None):
   model, opt, epoch = custom_utils.load(model, opt, dev, model_path, show_stats=False)
-  final_loss, final_iou = custom_utils.validate(model, dev, loss_func, None, epoch, config, category_list=category_list, save=False)
+  final_loss, final_iou1, final_iou2, final_iou3 = custom_utils.validate(model, dev, loss_func, None, epoch, config, category_list=category_list, save=False)
 
   if save_path:
     csv_data = f'{final_loss},{final_iou}'
@@ -67,8 +67,3 @@ if __name__ == '__main__':
       validate(specific_model_path, model, dev, loss_func, config, category_list, save_path=save_path)
 
   print("Complete!")
-
-  # TODO:
-  # compute_iou1(output, target)
-  # compute_iou2(outputs: torch.Tensor, labels: torch.Tensor)
-  # compute_iou3(output, target, num_classes)

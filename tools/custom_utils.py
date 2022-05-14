@@ -356,12 +356,11 @@ def loss_batch(model, device, scaler, loss_func, xb, yb, opt=None, num_classes=N
       # sum_dice_loss += dice_coef(target[i], output.argmax(1)[i])
 
     # iou_score1 = (sum_batch_iou_score1 / output.shape[0]) # 1 -
-    # iou_score1 = compute_iou1(output.argmax(1), target)
-    # iou_score2 = compute_iou2(output.argmax(1), target)
+
+    iou_score1 = compute_iou1(output.argmax(1), target)
+    iou_score2 = compute_iou2(output.argmax(1), target)
     iou_score3 = compute_iou3(output.argmax(1), target, num_classes)
 
-    # Select score to use
-    selected_iou_score = iou_score3
 
     del output
     del target
@@ -382,7 +381,7 @@ def loss_batch(model, device, scaler, loss_func, xb, yb, opt=None, num_classes=N
 
   # Check if loss.detach() is better
   # cpu().item()
-  return [loss.detach(), dice_loss, selected_iou_score, opt]
+  return [loss.detach(), dice_loss, iou_score1, iou_score2, iou_score3, opt]
 
 def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, config, opt=None, save=True):
   sum_of_loss = 0.0
@@ -398,10 +397,14 @@ def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, co
   if opt is None: # Validation
     # Dont use sub-batches
     for xb, yb in dataloader:
-      loss, dice_loss, iou_score, _opt = loss_batch(model, device, scaler, loss_func, xb, yb, opt=opt, num_classes=num_classes)
+      loss, dice_loss, iou_score1, iou_score2, iou_score3, _opt = loss_batch(model, device, scaler, loss_func, xb, yb, opt=opt, num_classes=num_classes)
 
       sum_of_loss += loss
-      sum_of_iou += iou_score
+
+      sum_of_iou1 += iou_score1
+      sum_of_iou2 += iou_score2
+      sum_of_iou3 += iou_score3
+
       sum_of_dice += dice_loss
 
       pbar.update(1)
@@ -424,26 +427,34 @@ def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, co
         xb = inner_batch[0][i:i+batch_size]
         yb = inner_batch[1][i:i+batch_size]
 
-        loss, dice_loss, iou_score, opt = loss_batch(model, device, scaler, loss_func, xb, yb, opt=opt, num_classes=num_classes)
+        loss, dice_loss, iou_score1, iou_score2, iou_score3, opt = loss_batch(model, device, scaler, loss_func, xb, yb, opt=opt, num_classes=num_classes)
 
         sum_of_loss += loss
-        sum_of_iou += iou_score
+
+        sum_of_iou1 += iou_score1
+        sum_of_iou2 += iou_score2
+        sum_of_iou3 += iou_score3
+
         sum_of_dice += dice_loss
 
       pbar.update(1)
 
     final_loss = sum_of_loss / (len(dataloader) * batch_size)
-    final_iou = sum_of_iou / (len(dataloader) * batch_size)
+
+    final_iou1 = sum_of_iou1 / (len(dataloader) * batch_size)
+    final_iou2 = sum_of_iou2 / (len(dataloader) * batch_size)
+    final_iou3 = sum_of_iou3 / (len(dataloader) * batch_size)
+
     final_dice = sum_of_dice / (len(dataloader) * batch_size)
 
-    pbar.write(f'Epoch {epoch} train loss: {final_loss} train IoU: {final_iou} train dice: {final_dice} lr: {curr_lr}')
+    pbar.write(f'Epoch {epoch} train loss: {final_loss} train IoU: {final_iou3} train dice: {final_dice} lr: {curr_lr}')
 
     train_csv_path = f'{config["save_path"]}/train_loss.csv'
 
     if save:
       save_csv(train_csv_path, f'{final_loss},{final_iou},{final_dice},{curr_lr}')
 
-  return [final_loss, final_iou, opt]
+  return [final_loss, final_iou1, final_iou2, final_iou3, opt]
 
 def train(model, device, loss_func, opt, epoch, config, outer_batch_size, category_list=None):
   # Load Data - in train step to save memory
@@ -452,7 +463,7 @@ def train(model, device, loss_func, opt, epoch, config, outer_batch_size, catego
   model = model.train()
   scaler = torch.cuda.amp.GradScaler(enabled=True)
 
-  final_loss, final_iou, opt = run_loop(model, device, train_dataloader, config["batch_size"], scaler, loss_func, epoch, config, opt=opt)
+  final_loss, final_iou1, final_iou2, final_iou3, opt = run_loop(model, device, train_dataloader, config["batch_size"], scaler, loss_func, epoch, config, opt=opt)
 
   del train_dataloader
   del train_dataset
@@ -470,7 +481,7 @@ def validate(model, device, loss_func, lr_scheduler, epoch, config, category_lis
   sum_of_iou = 0.0
 
   with torch.no_grad():
-    final_loss, final_iou, _opt = run_loop(model, device, val_dataloader, config["val_batch_size"], scaler, loss_func, epoch, config, opt=None, save=save)
+    final_loss, final_iou1, final_iou2, final_iou3, _opt = run_loop(model, device, val_dataloader, config["val_batch_size"], scaler, loss_func, epoch, config, opt=None, save=save)
 
   del val_dataloader
   del val_dataset
@@ -479,4 +490,4 @@ def validate(model, device, loss_func, lr_scheduler, epoch, config, category_lis
   if lr_scheduler is not None and config["opt_function"] == 'SGD':
     lr_scheduler.step(final_loss) # Use the average val loss for the batch
 
-  return final_loss, final_iou
+  return final_loss, final_iou1, final_iou2, final_iou3

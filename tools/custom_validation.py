@@ -39,6 +39,9 @@ def validate(model_path, model, dev, loss_func, config, category_list, save_path
 ################################################################################
 if __name__ == '__main__':
   print('Custom validate deeplabv3 ...')
+  if len(sys.argv) < 2 and len(sys.argv) > 3:
+    raise RuntimeError("Please provide the path to the model or the path to the folder of models and csv save path.")
+
   dev, summary_dev = custom_utils.fetch_device()
 
   model_path = sys.argv[1]

@@ -200,7 +200,7 @@ def xavier_uniform_init(layer):
     gain = nn.init.calculate_gain('relu')
     nn.init.xavier_uniform_(layer.weight, gain=gain)
 
-def initialise_model(dev, config, pretrained=False, num_classes=21):
+def initialise_model(dev, config, pretrained=False, num_classes=21, randomise=True):
   if config["selected_model"] == 'deeplabv3_resnet101':
     model = models.segmentation.deeplabv3_resnet101(pretrained=pretrained, num_classes=num_classes)
   elif config["selected_model"] == 'deeplabv3_resnet50':
@@ -209,7 +209,9 @@ def initialise_model(dev, config, pretrained=False, num_classes=21):
     raise RuntimeError("Invalid model selected.")
 
   # Randomise weights
-  model.apply(xavier_uniform_init)
+  if randomise:
+    model.apply(xavier_uniform_init)
+
   model = model.to(dev)
 
   # Reference code uses SGD
@@ -232,6 +234,7 @@ def load(model, opt, device, path, show_stats=True):
   # TODO: Load optimizer
   print(f'Loading model from: {path}')
   checkpoint = torch.load(path)
+  epoch = checkpoint['epoch']
   model.load_state_dict(checkpoint['model'], strict=False)
   opt.load_state_dict(checkpoint['optimizer'])
   model.to(device)
@@ -241,7 +244,7 @@ def load(model, opt, device, path, show_stats=True):
   if show_stats:
     model_stats = summary(model, device=device)
 
-  return model, opt
+  return model, opt, epoch
 
 # Built to be compatible with reference code
 def save(model, opt, lr_scheduler, epoch, config, save_path):
@@ -472,6 +475,8 @@ def validate(model, device, loss_func, lr_scheduler, epoch, config, category_lis
   del val_dataloader
   del val_dataset
 
+  # https://pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.ReduceLROnPlateau.html
   if lr_scheduler is not None and config["opt_function"] == 'SGD':
-    # https://pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.ReduceLROnPlateau.html
     lr_scheduler.step(final_loss) # Use the average val loss for the batch
+
+  return final_loss, final_iou

@@ -38,7 +38,7 @@ def validate(model_path, dev, loss_func, save_path=False):
   final_loss, final_dice, final_iou1, final_iou2, final_iou3 = custom_utils.validate(model, dev, loss_func, None, epoch, config, category_list=category_list, save=False)
 
   if save_path:
-    csv_data = f'{final_loss},{final_iou1},{final_iou2},{final_iou3},{final_dice}'
+    csv_data = f'{epoch},{final_loss},{final_iou1},{final_iou2},{final_iou3},{final_dice}'
     custom_utils.save_csv(save_path, csv_data)
 
 ################################################################################

@@ -62,6 +62,7 @@ if __name__ == '__main__':
   elif len(sys.argv) == 3:
     save_path = sys.argv[2]
     models = os.listdir(f'{model_path}/')
+    models.sort()
 
     for specific_model_path_name in tqdm.tqdm(models):
       _name, ext = os.path.splitext(specific_model_path_name)

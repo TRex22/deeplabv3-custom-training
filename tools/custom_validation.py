@@ -3,6 +3,9 @@
 
 # Can also take in 2 arguments, where the first is the path to models and the
 # second is path and filename of the validation results csv
+
+# TODO: Create a training evaluator
+
 import os
 import gc
 import sys

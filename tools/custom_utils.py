@@ -483,7 +483,7 @@ def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, co
     train_csv_path = f'{config["save_path"]}/train_loss.csv'
 
     if save:
-      save_csv(train_csv_path, f'{final_loss},{final_iou1},{final_iou2},{final_iou3},{final_dice},{curr_lr}')
+      save_csv(train_csv_path, f'{epoch},{final_loss},{final_iou1},{final_iou2},{final_iou3},{final_dice},{curr_lr}')
 
   return [final_loss, final_dice, final_iou1, final_iou2, final_iou3, opt]
 

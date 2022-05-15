@@ -28,6 +28,8 @@ import utils
 from coco_utils import get_coco
 import transforms as T
 
+import deeplabv3_metrics
+
 SMOOTH = 1e-4 #1e-6 # Beware Float16!
 
 ################################################################################
@@ -347,23 +349,41 @@ def loss_batch(model, device, scaler, loss_func, xb, yb, opt=None, num_classes=N
     target = yb.to(device)
 
     loss = loss_func(output, target, ignore_index=255)
-    dice_loss = dice_coef(target, output.argmax(1))
 
-    # sum_batch_iou_score1 = 0.0
-    # sum_dice_loss = 0.0
+    max_output = output.argmax(1)
+    dice_loss = dice_coef(target, max_output)
 
-    # Iterate through batch
-    # TODO: use operators over batch?
-    # for i in range(output.shape[0]):
-      # sum_batch_iou_score1 += compute_iou1(output[i], target[i]).detach() # .cpu()
-      # sum_dice_loss += dice_coef(target[i], output.argmax(1)[i])
+    iou_score1 = compute_iou1(max_output, target)
+    iou_score2 = compute_iou2(max_output, target)
+    iou_score3 = compute_iou3(max_output, target, num_classes)
 
-    # iou_score1 = (sum_batch_iou_score1 / output.shape[0]) # 1 -
+    # Test other calcs
+    # sum_pixel_accuracy = 0.0
+    # sum_mean_accuracy = 0.0
+    # sum_mean_IU = 0.0
+    # sum_frequency_weighted_IU = 0.0
 
-    iou_score1 = compute_iou1(output.argmax(1), target)
-    iou_score2 = compute_iou2(output.argmax(1), target)
-    iou_score3 = compute_iou3(output.argmax(1), target, num_classes)
+    # # TODO: Turn into Torch
+    # result_batch_size = output.shape[0]
+    # np_max_output = max_output.cpu().numpy()
+    # np_target = target.cpu().numpy()
 
+    # # Iterate through batch
+    # for i in range(result_batch_size):
+    #   pixel_accuracy = deeplabv3_metrics.pixel_accuracy(np_max_output[i], np_target[i])
+    #   mean_accuracy = deeplabv3_metrics.mean_accuracy(np_max_output[i], np_target[i])
+    #   mean_IU = deeplabv3_metrics.pixel_accuracy(np_max_output[i], np_target[i])
+    #   frequency_weighted_IU = deeplabv3_metrics.pixel_accuracy(np_max_output[i], np_target[i])
+
+    #   sum_pixel_accuracy += pixel_accuracy
+    #   sum_mean_accuracy += mean_accuracy
+    #   sum_mean_IU += mean_IU
+    #   sum_frequency_weighted_IU += frequency_weighted_IU
+
+    # pixel_accuracy = sum_pixel_accuracy / result_batch_size
+    # mean_accuracy = sum_mean_accuracy / result_batch_size
+    # mean_IU = sum_mean_IU / result_batch_size
+    # frequency_weighted_IU = sum_frequency_weighted_IU / result_batch_size
 
     del output
     del target

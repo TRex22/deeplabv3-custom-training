@@ -37,6 +37,15 @@ model = model.eval()
 # Do stuff ...
 ```
 
+# Metrics Used
+## Description of metrics
+## Issues with metrics
+It appears that there are different standards for calculating IOU and Pixel Wise accuracy.
+Ive discovered that many of these calculations appear to tend to 1 and not provide an accurate result when looking at tensor batches.
+
+On-going work is required here.
+
+
 # Download Pre-trained Weights
 ## Trained on CityScapes
 

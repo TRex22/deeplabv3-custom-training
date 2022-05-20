@@ -4,6 +4,7 @@
 import sys
 import os
 import pandas
+import numpy as np
 
 from natsort import natsorted
 
@@ -17,6 +18,7 @@ files = os.listdir(f'{csv_path}/')
 files = natsorted(files) # Sorted in order
 
 print("================================================================================")
+best_epochs = []
 
 for specific_file_path_name in files:
   _name, ext = os.path.splitext(specific_file_path_name)
@@ -43,6 +45,10 @@ for specific_file_path_name in files:
     epochs.append(iou2_row["loss"].index[0])
     epochs.append(iou3_row["loss"].index[0])
 
+    best_epochs.append(loss_row["loss"].index[0])
+    best_epochs.append(iou2_row["loss"].index[0])
+    best_epochs.append(iou3_row["loss"].index[0])
+
     print(f'Min Loss\n: {loss_row}')
     print(f'Max IOU2\n: {iou2_row}')
     print(f'Max IOU3\n: {iou3_row}')
@@ -50,4 +56,6 @@ for specific_file_path_name in files:
     print(f'\nEpochs: {epochs}')
     print("================================================================================")
 
+best = np.unique(np.array(best_epochs))
+print(f'Best epochs: {best}')
 print("Complete!")

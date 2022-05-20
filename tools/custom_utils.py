@@ -448,7 +448,7 @@ def run_loop(model, device, dataloader, batch_size, scaler, loss_func, epoch, co
 
     if save:
       val_csv_path = f'{config["save_path"]}/val_loss.csv'
-      save_csv(val_csv_path, f'{final_loss},{final_iou1},{final_iou2},{final_iou3},{final_dice}')
+      save_csv(val_csv_path, f'{epoch},{final_loss},{final_iou1},{final_iou2},{final_iou3},{final_dice}')
 
   else: # Use sub-batches / Training
     curr_lr = opt.param_groups[0]["lr"]

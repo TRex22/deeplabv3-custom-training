@@ -1,6 +1,6 @@
-# Usage: python3 custom_tarining.py ./config.json
-# Usage: python3 custom_tarining.py ./model_42.pth
-# Usage: python3 custom_tarining.py ./model_42.pth ./config.json # Will use the custom config
+# Usage: python3 custom_training.py ./config.json
+# Usage: python3 custom_training.py ./model_42.pth
+# Usage: python3 custom_training.py ./model_42.pth ./config.json # Will use the custom config
 
 # TODO: Early stopping
 # TODO: Dynamic lr

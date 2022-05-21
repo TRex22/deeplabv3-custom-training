@@ -1,6 +1,8 @@
+import os
 import sys
 import cv2
 import re
+import tqdm
 
 import torch
 import torchvision
@@ -87,7 +89,30 @@ def convert_segmentation_to_colour(segmentation_map, label_set='cityscapes'):
 
   return colour_segmentation_map
 
+def segment_image(input_image_path, save_path, device, label_set, suffix='', save_raw=False):
+  img = Image.open(input_image_path).convert('RGB')
+  image_shape = np.array(img).shape
+  input = preprocess(img).to(device).unsqueeze(0)
 
+  img.close()
+
+  # input = torchvision.transforms.functional.to_tensor(image).to(device).unsqueeze(0)
+  prediction = model(input)
+
+  output = np.transpose(prediction['out'].argmax(1).cpu().numpy())
+  segmentation = convert_segmentation_to_colour(output, label_set=label_set)
+
+  if save_raw:
+    torch.save(output, f'{save_path}/raw_output.pth')
+
+  output_image = cv2.rotate(segmentation, cv2.ROTATE_90_COUNTERCLOCKWISE)
+  output_image = cv2.flip(output_image, 0)
+  output_image = cv2.resize(output_image, (image_shape[1], image_shape[0]), cv2.INTER_NEAREST) # INTER_NEAREST for segmentations
+
+  filename = input_image_path.split('.')[0].split('/')[-1]
+  cv2.imwrite(f'{save_path}/{filename}{suffix}.png', output_image)
+
+# Main Loop
 print('Generate Segmentation ...')
 
 if len(sys.argv) != 4:
@@ -128,25 +153,13 @@ preprocess = transforms.Compose([
   transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
 ])
 
-img = Image.open(input_image_path).convert('RGB')
-image_shape = np.array(img).shape
-input = preprocess(img).to(device).unsqueeze(0)
+if len(input_image_path.split('.')) > 1:
+  segment_image(input_image_path, save_path, device, label_set, suffix='_segmentation', save_raw=True)
+else:
+  images = os.listdir(f'{input_image_path}/')
 
-img.close()
-
-# input = torchvision.transforms.functional.to_tensor(image).to(device).unsqueeze(0)
-prediction = model(input)
-
-output = np.transpose(prediction['out'].argmax(1).cpu().numpy())
-segmentation = convert_segmentation_to_colour(output, label_set=label_set)
-
-torch.save(output, f'{save_path}/raw_output.pth')
-
-output_image = cv2.rotate(segmentation, cv2.ROTATE_90_COUNTERCLOCKWISE)
-output_image = cv2.flip(output_image, 0)
-output_image = cv2.resize(output_image, (image_shape[1], image_shape[0]), cv2.INTER_NEAREST) # INTER_NEAREST for segmentations
-
-filename = input_image_path.split('.')[0].split('/')[-1]
-cv2.imwrite(f'{save_path}/{filename}_segmentation.png', output_image)
+  for specific_image_path_name in tqdm.tqdm(images):
+    image_path = f'{input_image_path}/{specific_image_path_name}'
+    segment_image(image_path, save_path, device, label_set, suffix='', save_raw=False)
 
 print('Complete!')

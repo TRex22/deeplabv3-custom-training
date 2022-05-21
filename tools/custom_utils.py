@@ -342,8 +342,6 @@ def loss_batch(model, device, scaler, loss_func, xb, yb, opt=None, num_classes=N
     input = xb.to(device)
     prediction = model(input)
 
-    del input
-
     # Compute Loss
     output = prediction['out']
     target = yb.to(device)
@@ -385,6 +383,7 @@ def loss_batch(model, device, scaler, loss_func, xb, yb, opt=None, num_classes=N
     # mean_IU = sum_mean_IU / result_batch_size
     # frequency_weighted_IU = sum_frequency_weighted_IU / result_batch_size
 
+    del input
     del output
     del target
 

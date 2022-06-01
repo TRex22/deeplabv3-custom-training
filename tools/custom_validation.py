@@ -4,6 +4,10 @@
 # Can also take in 2 arguments, where the first is the path to models and the
 # second is path and filename of the validation results csv
 
+# Can also take in 3 arguments, where the first is the path to models, the
+# second is path and filename of the validation results csv, and the third
+# is the number of runs to average
+
 # TODO: Create a training evaluator
 
 import os
@@ -31,7 +35,7 @@ torch.autograd.profiler.emit_nvtx(False)
 ################################################################################
 # Validate Strategies                                                          #
 ################################################################################
-def validate(model_path, dev, loss_func, save_path=False):
+def validate(model_path, dev, loss_func, save_path=False, iteration=None):
   custom_utils.clear_gpu() # Needed to ensure no memory loss
 
   config, _start_epoch, model_path = custom_utils.open_config(model_path)
@@ -42,6 +46,9 @@ def validate(model_path, dev, loss_func, save_path=False):
   model, _opt, epoch = custom_utils.load(model, dev, model_path, show_stats=False)
   final_loss, final_dice, final_iou1, final_iou2, final_iou3 = custom_utils.validate(model, dev, loss_func, None, epoch, config, category_list=category_list, save=False)
 
+  if iteration:
+    epoch = iteration
+
   if save_path:
     csv_data = f'{epoch},{final_loss},{final_iou1},{final_iou2},{final_iou3},{final_dice}'
     custom_utils.save_csv(save_path, csv_data)
@@ -51,8 +58,11 @@ def validate(model_path, dev, loss_func, save_path=False):
 ################################################################################
 if __name__ == '__main__':
   print('Custom validate deeplabv3 ...')
-  if len(sys.argv) < 2 and len(sys.argv) > 3:
-    raise RuntimeError("Please provide the path to the model or the path to the folder of models and csv save path.")
+  if len(sys.argv) < 2 and len(sys.argv) > 4:
+    raise RuntimeError("Please provide: \n \
+      The path to the model \n \
+      The path to the folder of models and csv save path \n \
+      The path to the model, csv save path and number of iterations to average")
 
   dev, summary_dev = custom_utils.fetch_device()
 
@@ -74,5 +84,11 @@ if __name__ == '__main__':
 
       if ext == '.pth':
         validate(f'{model_path}/{specific_model_path_name}', dev, loss_func, save_path=save_path)
+  elif len(sys.argv) == 4:
+    save_path = sys.argv[2]
+    number_of_iterations = sys.argv[3]
+
+    for i in tqdm.tqdm(range(number_of_iterations)):
+      validate(model_path, dev, loss_func, save_path=save_path, iteration=i)
 
   print("Complete!")

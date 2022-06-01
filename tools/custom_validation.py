@@ -86,7 +86,7 @@ if __name__ == '__main__':
         validate(f'{model_path}/{specific_model_path_name}', dev, loss_func, save_path=save_path)
   elif len(sys.argv) == 4:
     save_path = sys.argv[2]
-    number_of_iterations = sys.argv[3]
+    number_of_iterations = Int(sys.argv[3])
 
     for i in tqdm.tqdm(range(number_of_iterations)):
       validate(model_path, dev, loss_func, save_path=save_path, iteration=i)

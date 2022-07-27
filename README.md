@@ -1,6 +1,10 @@
 # deeplabv3-custom-training
 [WIP] This is still a work in-progress. Ill hopefully get sometime soon to upload some of the trained models and improve the readme to explain each python console file
 
+I will also upload the model Ive found the best results with once Im confident its a good one.
+
+---
+
 This repo exists to train the pyTorch Torchvision deeplabv3 models with custom labels and datasets.
 
 I could not find a good set of trained models online so I decided to train my own.
